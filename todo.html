@@ -2,47 +2,59 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>jQuery.twFileDemo</title>
+    <title>todo.html</title>
     <style type="text/css">
-        #editButton {
-            float: left;
-        }
 
         #error {
             display: none;
-            float: left;
             text-indent: 20px;
             color: #F00;
         }
+
+        #tasks
+        {
+            text-align:left;
+            border-collapse:collapse;
+        }
+
+        #tasks table, tr, td, th
+        {
+            vertical-align:text-top;
+            border: 1px solid black;
+        }
+
+        #tasks th
+        {
+            vertical-align:bottom;
+        }
+
+        #tasks td:nth-child(1)
+        {
+            text-align:right;
+        }
+
+        #tasks td:nth-child(2), td:nth-child(3), td:nth-child(4), td:nth-child(5)
+        {
+            text-align: right;
+        }
+
     </style>
 </head>
 <body>
-    <h1>jQuery.twFileDemo</h1>
-    <p>
-        This is an example file that can be used to test out the saving and loading system.
-        Press the edit button to view the page HTML and you can then make changes. Press save
-        to update the page.
-    </p>
-    <h2>Dummy Text</h2>
-    <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris viverra nisl sagittis lorem
-        rutrum eu lacinia elit ultrices. In laoreet tortor in dolor dignissim vitae lacinia massa dignissim.
-        Sed luctus, tortor a aliquam vulputate, orci tellus vulasdasdputate risus, sed vehicula quam massa ac orci.
-        Cras in nibh purus, ac tempor est. In tincidunt nulla et velit accumsan non tempor massa vulputate.
-        Nunc condimentum aliquam ligulasdasda, vel tincidunt nunc fringilla eget. Ut arcu nisl, auctor viverra tempor ut,
-        dapibus et mi. Etiam porttitor, quam venenatis luctus porta, risus sapien rutrum ipsum, quis luctus sem mi
-        posuere urna. Duis interdum, justo quis sodales vulputate, mauris nisi hendrerit lacus,
-        porttitor consequat diam tortor ut lorem. Nullam in justo sit amet orci ornare porta quis nec nulla.
-        Vestibulum eu mattis arcu. In nulla purus, vestibulum id ornare placerat, sagittis quis lacus.
-        Aenean a eros eu sem pulvinar iaculis. Quisque molestie, sapien ac luctus tempus, eros dui posuere nulla,
-        quis euismod dolor nisl nec dolor. Duis laoreet varius fermentum. Pellentesque habitant morbi tristique
-        senectus et netus et malesuada fames ac turpis egestas. Mauris at nulla quam, et eleifend mi.
-        Maecenas magna arcu, posuere sit amet ullamcorper vehicula, ornare nec lectus. Curabitur nec interdum nisi.
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-    </p>
-    <h2>Tools</h2>
-    <input type="button" id="editButton" value="Edit">
-    <div id="error">Cannot load file</div>
+
+    <div style="border: 1px dashed red; width:100%">
+        <input type="button" id="editButton" value="Edit this file">
+        <div id="error">Cannot load file</div>
+    </div>
+
+    <hr>
+
+    <table id="tasks" nextid=5>
+        <tr id=0> <th>priority</th> <th>done</th> <th>due</th> <th>added</th> <th>modified</th> <th>tags</th> <th>memo*</th> </tr>
+        <tr id=1> <td>300</td> <td></td> <td>11.05.25 00:00</td> <td>80.05.25 07:30</td> <td>10.04.16 08:51</td> <td>@context +project</td> <td>Task with 5 minute priority</td> </tr>
+        <tr id=2> <td>-60</td> <td></td> <td>0</td> <td>10.04.16 19:30</td> <td>10.04.16 20:30</td> <td></td> <td>Task with a really long memo. I mean this thing is gonna wrap, man... This task is so long you won't see the end until the cows come home. Isn't that really long? I think it is</td> </tr>
+        <tr id=4> <td>0</td> <td>10.04.16 23:59</td> <td>11.11.11 11:11</td> <td>11.11.11 11:11</td> <td>11.11.11 11:11</td> <td>:done</td> <td>Task #4</td> </tr>
+    </table>
 
     <!-- jQuery -->
     <script type="text/javascript">
@@ -379,6 +391,7 @@
             }
 
         })(jQuery);
+
     </script>
     <!-- demo code -->
     <script type="text/javascript">
