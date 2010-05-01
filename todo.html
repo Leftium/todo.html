@@ -44,6 +44,11 @@
 
     <div style="border: 1px dashed red; width:100%">
         <input type="button" id="editButton" value="Edit this file">
+        <div style="width:100%; display:table">
+            <input type="button" id="evalButton" value="Evaluate:" style="display:table-cell;">
+            <input type="text" id="statement" value="Date.parse('today').toString()" style="display:table-cell; width:85%" />
+        </div>
+        <div id="results">todo.htm v0.00.0001 -- by wonsungi</div>
         <div id="error">Cannot load file</div>
     </div>
 
@@ -398,6 +403,15 @@
         // Run on document load
         jQuery(function() {
             var $ = jQuery; // local alias
+
+            // When the evaluate button is clicked, execute the statement
+            // in the "statement" text input.
+            $('#evalButton').click(function() {
+                var results = eval($('#statement').val());
+                if(results == undefined) results = "eval() failed";
+                $("#results").text(results);
+                });
+
             // When the edit button is clicked, open an editing box
             // over the page to edit the html of the page. On save,
             // the page reloads with the changes.
