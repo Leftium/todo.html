@@ -45,12 +45,12 @@
     <div style="border: 1px dashed red; width:100%">
         <input type="button" id="editButton" value="Edit this file">
         <input type="button" id="saveButton" value="Save this file">
-        <div style="width:100%; display:table">
-            <input type="button" id="evalButton" value="Evaluate:" style="display:table-cell;">
-            <input type="text" id="statement" value="Date.parse('today').toString()" style="display:table-cell; width:85%" />
-        </div>
-        <div id="results">todo.htm v0.00.0001 -- by wonsungi</div>
         <div id="error">Cannot load file</div>
+        <form id='commandLine' style="width:100%; display:table">
+            <input type="submit" id="evalButton" value="Evaluate:" style="display:table-cell;">
+            <input type="text" id="statement" value="Date.parse('today')" style="display:table-cell; width:85%" />
+        </form>
+        <div id="results">todo.htm v0.00.0002 -- by wonsungi</div>
     </div>
 
     <hr>
@@ -418,13 +418,43 @@
         jQuery(function() {
             var $ = jQuery; // local alias
 
+            // JS evaluator gets the default focus
+            $('#statement').focus();
+
             // When the evaluate button is clicked, execute the statement
             // in the "statement" text input.
-            $('#evalButton').click(function() {
-                var results = eval($('#statement').val());
-                if(results == undefined) results = "eval() failed";
+            $('#commandLine').submit(function(e) {
+                e.preventDefault();
+
+                var results;
+                try
+                {
+                    results = eval($('#statement').val());
+                }
+                catch(err)
+                {
+                    for(var key in err)
+                    {
+                        results += key + ": " + err[key] + "\r\n";
+                    }
+                }
+
+                if (typeof results == 'undefined')
+                {
+                    results = 'UNDEFINED';
+                }
+                else if (results == null)
+                {
+                    results = 'NULL';
+                }
+                else
+                {
+                    results = results.toString();
+                }
                 $("#results").text(results);
-                });
+
+                return false;
+            });
 
             // When the edit button is clicked, open an editing box
             // over the page to edit the html of the page. On save,
