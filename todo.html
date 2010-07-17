@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>todo.html v0.00.0005 by wonsungi</title>
+    <title>todo.html v0.00.0006 by wonsungi</title>
     <style type="text/css">
         #appDiv {
             position: fixed;
@@ -378,6 +378,8 @@
 
     <!-- todo.html code -->
     <script type="text/javascript">
+        var DEBUG = false;
+
         function doJavaScript(jsString)
         {
             var results = "";
@@ -400,6 +402,28 @@
             return results;
         }
 
+        function doCommand(command)
+        {
+            var match  = command.match(/^\s*([^\s]+)\s*(.*)/)
+            var action = match[1].toLowerCase();
+            var args   = match[2];
+            var result = "";
+
+            if (DEBUG) {
+                result = 'action    = ' + action + '\n' +
+                         'args      = ' + args +   '\n';
+            }
+
+            if (action == "js" || action == "j") {
+                result += doJavaScript(args);
+            } else {
+                // default to JavaScript
+                result += doJavaScript(command);
+            }
+
+            return result;
+        }
+
         // Run on document load
         jQuery(function() {
             var $ = jQuery; // local alias
@@ -414,7 +438,7 @@
             $('#commandLine').submit(function(e) {
                 e.preventDefault();
 
-                var results = doJavaScript($('#statement').val());
+                var results = doCommand($('#statement').val());
 
                 var outputEl = $('#output');
                 outputEl.text(outputEl.text() + '\n' + results);
