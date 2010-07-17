@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>todo.html v0.00.0010 by wonsungi@gmail.com</title>
+    <title>todo.html v0.00.0011 by wonsungi@gmail.com</title>
     <style type="text/css">
         #appDiv {
             position: fixed;
@@ -603,7 +603,7 @@ Environment variables:
             } else if (action == "help") {
                 result += doHelp('usage') + '\n\n' + doHelp('help');
             } else if (action == "clear" || action == "clr" || action == "c") {
-                $('#output').text("");
+                 setTimeout("$('#output').text('')", 0);
             } else if (action == "js" || action == "j") {
                 result += doJavaScript(args);
             } else {
@@ -628,13 +628,16 @@ Environment variables:
             $('#commandLine').submit(function(e) {
                 e.preventDefault();
 
-                var results = doCommand($('#statement').val());
-
                 var outputEl = $('#output');
-                outputEl.text(outputEl.text() + results + '\n');
+
+                var statement = $('#statement').val();
+                outputEl.text(outputEl.text() + '>' + statement + '\n');
+                outputEl.text(outputEl.text() + doCommand(statement) + '\n');
 
                 // Scroll to bottom of textarea
                 outputEl.scrollTop(-1 >>> 1);
+
+                $('#statement').val("");
 
                 return false;
             });
