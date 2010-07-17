@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>todo.html v0.00.0003 by wonsungi</title>
+    <title>todo.html v0.00.0004 by wonsungi</title>
     <style type="text/css">
         #appDiv {
             position: fixed;
@@ -16,19 +16,15 @@
 </head>
 <body>
     <div id="appDiv">
-
-    <div id="outputDiv" style="width:95%; height:95%; margin-left: auto; margin-right: auto; margin-top: 8px;" >
-        <textarea id=output style="width: 99%; height: 99%" >todo.html v0.00.0003 by wonsungi</textarea>
+        <div id="outputDiv" style="width:95%; height:95%; margin-left: auto; margin-right: auto; margin-top: 8px;" >
+            <textarea id=output style="width: 99%; height: 99%" >todo.html v0.00.0004 by wonsungi</textarea>
+        </div>
+        <div style="width:95%; height:5%; margin-left: auto; margin-right: auto;">
+            <form id='commandLine' style="width:100%">
+                <input type="textarea" id="statement" value="Date.parse('today')" style="width:99%" />
+            </form>
+        </div>
     </div>
-
-    <div style="width:95%; height:5%; margin-left: auto; margin-right: auto;">
-        <form id='commandLine' style="width:100%">
-            <input type="textarea" id="statement" value="Date.parse('today')" style="width:99%" />
-        </form>
-    </div>
-
-    </div>
-
 
     <!-- jQuery -->
     <script type="text/javascript">
@@ -427,8 +423,7 @@
 
                 return false;
             });
-
-    });
+        });
     </script>
 </body>
 
