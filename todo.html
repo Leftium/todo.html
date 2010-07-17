@@ -428,7 +428,7 @@
         jQuery(function() {
             var $ = jQuery; // local alias
 
-            $('#output').text(document.title);
+            $('#output').text(document.title + '\n');
 
             // Input textarea gets the default focus
             $('#statement').focus();
@@ -441,7 +441,7 @@
                 var results = doCommand($('#statement').val());
 
                 var outputEl = $('#output');
-                outputEl.text(outputEl.text() + '\n' + results);
+                outputEl.text(outputEl.text() + results + '\n');
 
                 // Scroll to bottom of textarea
                 outputEl.scrollTop(-1 >>> 1);
