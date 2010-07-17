@@ -378,11 +378,33 @@
 
     <!-- todo.html code -->
     <script type="text/javascript">
+        function doJavaScript(jsString)
+        {
+            var results = "";
+
+            try {
+                results = eval(jsString);
+            } catch(err) {
+                for(var key in err) {
+                    results += key + ": " + err[key] + "\n";
+                }
+            }
+
+            if (typeof results == 'undefined') {
+                results = 'UNDEFINED';
+            } else if (results == null) {
+                results = 'NULL';
+            } else {
+                results = results.toString();
+            }
+            return results;
+        }
+
         // Run on document load
         jQuery(function() {
             var $ = jQuery; // local alias
 
-            // JS evaluator gets the default focus
+            // Input textarea gets the default focus
             $('#statement').focus();
 
             // Execute the statement in the "statement" text input
@@ -390,31 +412,8 @@
             $('#commandLine').submit(function(e) {
                 e.preventDefault();
 
-                var results;
-                try
-                {
-                    results = eval($('#statement').val());
-                }
-                catch(err)
-                {
-                    for(var key in err)
-                    {
-                        results += key + ": " + err[key] + "\r\n";
-                    }
-                }
+                var results = doJavaScript($('#statement').val());
 
-                if (typeof results == 'undefined')
-                {
-                    results = 'UNDEFINED';
-                }
-                else if (results == null)
-                {
-                    results = 'NULL';
-                }
-                else
-                {
-                    results = results.toString();
-                }
                 var outputEl = $('#output');
                 outputEl.text(outputEl.text() + '\n' + results);
 
