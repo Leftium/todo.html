@@ -615,8 +615,9 @@ Environment variables:
                 var ta = $('<textarea rows=1 id=removeme></textarea>');
                 $('body').append(ta);
 
-                var oldHeight = ta[0].scrollHeight;
                 ta.val('\n');
+                var oldHeight = ta[0].scrollHeight;
+                ta.val('\n\n');
                 var newHeight = ta[0].scrollHeight;
 
                 $('#removeme').empty();
