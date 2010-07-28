@@ -670,31 +670,29 @@ Environment variables:
             // Public Members //
 
             this.add = function(command) {
-                if (command != commandHistory[place]) {
-                  place++;
-                  commandHistory.splice(place, 0, command);
-                }
-                place++;
+               // Remove command from history
+               history = $.grep(history, function (c) { return c != command; });
+
+               history.splice(history.length - 1, 0, command);
+               place = history.length - 1;
             }
 
             this.clear = function() {
                 jqObject.val('');
             }
 
-            this.history = function(goingUp) {
-                if (commandHistory.length == 0) return;
+            this.traverseHistory = function(goingUp) {
                 if (goingUp) {
-                    place = (place - 1 + commandHistory.length) %
-                            commandHistory.length;
+                    place = Math.max(place - 1, 0);
                 } else {
-                    place = (place + 1 ) % commandHistory.length;
+                    place = Math.min(place + 1, history.length - 1);
                 }
-                jqObject.val(commandHistory[place]);
+                jqObject.val(history[place]);
             }
 
             // Private Members //
             var place = 0;
-            var commandHistory = [];
+            var history = [''];
         }
 
         function doHelp(id)
@@ -794,7 +792,7 @@ Environment variables:
 
                   case 38: // up
                   case 40: // down
-                    commandTextArea.history(e.which == 38);
+                    commandTextArea.traverseHistory(e.which == 38);
                     break;
 
                   case 27: // esc
