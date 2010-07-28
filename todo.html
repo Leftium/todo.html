@@ -588,15 +588,19 @@ Environment variables:
             /// Public Members ///
 
             this.setText = function(text) {
-                return jqObject.text(text + padding());
+                jqObject.val(text + padding());
             }
 
-            this.addText = function(text) {
-                var re = new RegExp('\\n{' + paddingLines + '}$');
-                return this.setText(jqObject.text().replace(re, '') +
-                                    text + '\n');
-            }
+            this.addText = function(newText) {
+                if (newText == '') { return; }
 
+                var origText = jqObject.val();
+                // Replace padding with newText
+                var re = new RegExp('((PADDING:\\d*)*\\n){' + paddingLines +
+                                    '}(END| |~)$');
+                newText = origText.replace(re, newText + '\n');
+                this.setText(newText);
+            }
             this.scroll = function() {
                 var previousPadding      = savedPadding;
                 var previousScrollHeight = savedScrollHeight;
