@@ -603,7 +603,7 @@ Environment variables:
             }
 
             this.setMark = function() {
-                markScrollHeight = jqObject[0].scrollHeight - lineHeight;
+                markScrollHeight = jqObject.scrollHeight() - lineHeight;
             }
 
             this.gotoMark = function () {
@@ -627,9 +627,9 @@ Environment variables:
                 $('body').append(ta);
 
                 ta.val('\n');
-                var oldHeight = ta[0].scrollHeight;
+                var oldHeight = ta.scrollHeight();
                 ta.val('\n\n');
-                var newHeight = ta[0].scrollHeight;
+                var newHeight = ta.scrollHeight();
 
                 $('#removeme').empty();
                 return newHeight - oldHeight;
@@ -725,6 +725,12 @@ Environment variables:
         // Run on document load
         jQuery(function() {
             var $ = jQuery; // local alias
+
+            // IE does not give the correct scrollHeight on the first call
+            $.fn.scrollHeight = function() {
+                this[0].scrollHeight;
+                return this[0].scrollHeight;
+            };
 
             var outputTextArea = new OutputTextArea($('#output'));
             outputTextArea.setMark();
