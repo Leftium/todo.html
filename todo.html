@@ -601,15 +601,14 @@ Environment variables:
                 newText = origText.replace(re, newText + '\n');
                 this.setText(newText);
             }
-            this.scroll = function() {
-                var previousPadding      = savedPadding;
-                var previousScrollHeight = savedScrollHeight;
 
-                savedPadding      = paddingLines;
-                savedScrollHeight = jqObject[0].scrollHeight;
+            this.setMark = function() {
+                markScrollHeight = jqObject[0].scrollHeight - lineHeight;
+            }
 
-                jqObject.scrollTop(previousScrollHeight -
-                                   ((previousPadding + 1) * lineHeight));
+            this.gotoMark = function () {
+                //// alert('goto:' + (markScrollHeight - markPadding)/lineHeight);
+                jqObject.scrollTop(markScrollHeight - markPadding);
             }
 
             this.page = function (isPageUp) {
@@ -645,6 +644,7 @@ Environment variables:
                 var ret    = (PADDING_ON ? 'END' : ' ');
 
                 paddingLines = Math.floor(jqObject[0].clientHeight / lineHeight);
+                markPadding  = paddingLines * lineHeight;
 
                 for (var i = 0; i < paddingLines; i++) {
                     ret = (PADDING_ON ? 'PADDING:' + (i+1) : '') + '\n' + ret;
@@ -652,6 +652,8 @@ Environment variables:
                 return ret;
             };
 
+            var markPadding;
+            var markScrollHeight;
 
             /// Initialize private members ///
 
@@ -659,10 +661,7 @@ Environment variables:
             // when padding() constructs padding string.
             paddingLines = 0;
 
-            // Initialize output textarea
-            this.setText('');
-            savedPadding = paddingLines;
-            savedScrollHeight = jqObject[0].scrollHeight;
+            this.setMark();
         }
 
         // Maintains command history.
@@ -730,9 +729,9 @@ Environment variables:
             var $ = jQuery; // local alias
 
             var outputTextArea = new OutputTextArea($('#output'));
+            outputTextArea.setMark();
             outputTextArea.setText(document.title + '\n\n' +
                                    doHelp('usage') + '\n');
-            outputTextArea.scroll();
 
             function doCommand(command) {
                 var match  = command.match(/^\s*([^\s]+)\s*(.*)/)
@@ -782,10 +781,10 @@ Environment variables:
                     outputTextArea.addText('>' + command);
                     outputTextArea.addText(doCommand(command));
 
-                    // Scroll to top of new output
-                    outputTextArea.scroll();
 
                     $('#command').val("");
+                        // Snap to beginning of last output
+                        outputTextArea.gotoMark();
                     break;
 
                   case 33: // page up
