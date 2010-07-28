@@ -690,6 +690,11 @@ Environment variables:
                 jqObject.val(history[place]);
             }
 
+            this.getHistory = function() {
+                // Leave off last "blank" history item.
+                return history.slice(0,history.length - 1);
+            }
+
             // Private Members //
             var place = 0;
             var history = [''];
@@ -756,6 +761,11 @@ Environment variables:
                      outputTextArea.setText('');
                 } else if (action == "js" || action == "j") {
                     result += doJavaScript(args);
+
+                } else if (action == 'history' ||
+                           action == 'hi') {
+                    result += commandTextArea.getHistory().join('\n');
+
                 } else {
                     // default to JavaScript
                     result += doJavaScript(command);
