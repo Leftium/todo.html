@@ -622,7 +622,7 @@ Environment variables:
             /// Private Members ///
 
             // Calculate how tall the textarea font is using a dummy textarea
-            lineHeight = function () {
+            var lineHeight = function () {
                 var ta = $('<textarea rows=1 id=removeme></textarea>');
                 $('body').append(ta);
 
@@ -640,7 +640,7 @@ Environment variables:
             // scrolling text to top even if textarea is not filled, yet.
             // Computes a new string every time, in case the textarea was
             // resized.
-            padding = function() {
+            var padding = function() {
                 var ret    = (PADDING_ON ? 'END' : ' ');
 
                 paddingLines = Math.floor(jqObject[0].clientHeight / lineHeight);
@@ -659,7 +659,7 @@ Environment variables:
 
             // Number of newlines in padding string. Automatically updated
             // when padding() constructs padding string.
-            paddingLines = 0;
+            var paddingLines = 0;
 
             this.setMark();
         }
