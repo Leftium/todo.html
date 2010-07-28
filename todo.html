@@ -788,17 +788,26 @@ Environment variables:
             $('#command').keydown(function(e) {
                 switch (e.which) {
                   case 13: // return
-                    var command = $('#command').val();
-
-                    commandTextArea.add(command);
-
-                    outputTextArea.addText('>' + command);
-                    outputTextArea.addText(doCommand(command));
-
-
-                    $('#command').val("");
+                    var command = $.trim($('#command').val());
+                    if (command == '') {
                         // Snap to beginning of last output
                         outputTextArea.gotoMark();
+                        commandTextArea.clear();
+                    } else {
+                        commandTextArea.add(command);
+
+                        outputTextArea.setMark();
+                        outputTextArea.addText('>' + command);
+                        outputTextArea.addText(doCommand(command));
+
+                        // Delay to ensure <textarea> has updated
+                        setTimeout(function() {
+                            // Snap to beginning of output
+                            outputTextArea.gotoMark();
+                        }, 0);
+
+                        commandTextArea.clear();
+                    }
                     break;
 
                   case 33: // page up
