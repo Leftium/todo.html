@@ -580,6 +580,7 @@ Environment variables:
     <!-- todo.html code -->
     <script type="text/javascript">
         var DEBUG = false;
+        var PADDING_ON = false;
 
         // Encapsulates functionality to display text output to a <textarea>
         function OutputTextArea(jqObject)
@@ -637,12 +638,12 @@ Environment variables:
             // Computes a new string every time, in case the textarea was
             // resized.
             padding = function() {
-                var ret = "";
+                var ret    = (PADDING_ON ? 'END' : ' ');
 
                 paddingLines = Math.floor(jqObject[0].clientHeight / lineHeight);
 
                 for (var i = 0; i < paddingLines; i++) {
-                    ret += '\n';
+                    ret = (PADDING_ON ? 'PADDING:' + (i+1) : '') + '\n' + ret;
                 }
                 return ret;
             };
