@@ -582,6 +582,11 @@ Environment variables:
         var DEBUG = false;
         var PADDING_ON = false;
 
+        // Utility method to join variables and strings
+        function zip() {
+            return Array.prototype.slice.call(arguments).join(' ');
+        }
+
         // Encapsulates functionality to display text output to a <textarea>
         function OutputTextArea(jqObject)
         {
