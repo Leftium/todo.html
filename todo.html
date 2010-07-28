@@ -607,7 +607,6 @@ Environment variables:
             }
 
             this.gotoMark = function () {
-                //// alert('goto:' + (markScrollHeight - markPadding)/lineHeight);
                 jqObject.scrollTop(markScrollHeight - markPadding);
             }
 
@@ -643,7 +642,8 @@ Environment variables:
             var padding = function() {
                 var ret    = (PADDING_ON ? 'END' : ' ');
 
-                paddingLines = Math.floor(jqObject[0].clientHeight / lineHeight);
+                paddingLines = Math.floor(jqObject[0].clientHeight /
+                                          lineHeight);
                 markPadding  = paddingLines * lineHeight;
 
                 for (var i = 0; i < paddingLines; i++) {
@@ -654,9 +654,6 @@ Environment variables:
 
             var markPadding;
             var markScrollHeight;
-
-            /// Initialize private members ///
-
             // Number of newlines in padding string. Automatically updated
             // when padding() constructs padding string.
             var paddingLines = 0;
@@ -667,7 +664,7 @@ Environment variables:
         // Maintains command history.
         function CommandTextArea(jqObject)
         {
-            // Public Members //
+            /// Public Members ///
 
             this.add = function(command) {
                // Remove command from history
@@ -695,19 +692,19 @@ Environment variables:
                 return history.slice(0,history.length - 1);
             }
 
-            // Private Members //
+            /// Private Members ///
             var place = 0;
             var history = [''];
         }
 
-        function doHelp(id)
+        function getText(id)
         {
             return $('#' + id).text();
         }
 
         function doJavaScript(jsString)
         {
-            var results = "";
+            var results = '';
 
             try {
                 results = eval(jsString);
@@ -740,26 +737,36 @@ Environment variables:
             var outputTextArea = new OutputTextArea($('#output'));
             outputTextArea.setMark();
             outputTextArea.setText(document.title + '\n\n' +
-                                   doHelp('usage') + '\n');
+                                   getText('usage') + '\n');
 
             function doCommand(command) {
+                var result = '';
                 var match  = command.match(/^\s*([^\s]+)\s*(.*)/)
-                var action = match[1].toLowerCase();
-                var args   = match[2];
-                var result = "";
+                var action = '';
+                var args   = '';
+
+                if (match && match[1] && (action = match[1].toLowerCase()) &&
+                             match[2] && (args   = match[2])) {
+                    void(0);
+                }
 
                 if (DEBUG) {
                     result = 'action    = ' + action + '\n' +
                              'args      = ' + args +   '\n';
                 }
 
-                if (action == "h") {
-                    result += doHelp('usage') + '\n\n' + doHelp('shorthelp');
-                } else if (action == "help") {
-                    result += doHelp('usage') + '\n\n' + doHelp('help');
-                } else if (action == "clear" || action == "clr" || action == "c") {
-                     outputTextArea.setText('');
-                } else if (action == "js" || action == "j") {
+                if (action == 'h') {
+                    result += getText('usage') + '\n\n' + getText('shorthelp');
+
+                } else if (action == 'help') {
+                    result += getText('usage') + '\n\n' + getText('help');
+
+                } else if (action == 'clear' ||
+                           action == 'clr'   ||
+                           action == 'c') {
+                    outputTextArea.setText('');
+
+                } else if (action == 'js' || action == 'j') {
                     result += doJavaScript(args);
 
                 } else if (action == 'history' ||
