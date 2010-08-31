@@ -1,0 +1,35 @@
+#appDiv {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: blue;
+}
+
+#outputDiv, #commandDiv {
+    position: absolute;
+    width: 96%;
+    left: 2%;
+    right: 98%;
+}
+
+#outputDiv {
+    top: 8px;
+    bottom: 35px;
+}
+
+#commandDiv {
+    bottom: 8px;
+    height: 16px;
+}
+
+#output, #command {
+    width: 100%;
+    height: 100%;
+}
+
+#usage, #shorthelp, #help {
+    position: fixed;  // suppress scroll bars
+}
+
