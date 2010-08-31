@@ -297,13 +297,13 @@ Environment variables:
             }
 
             this.addText = function(newText) {
-                if (newText == '') { return; }
+                if (newText != '') newText += '\n';
 
                 var origText = jqObject.val();
                 // Replace padding with newText
                 var re = new RegExp('((PADDING:\\d*)*\\n){' + paddingLines +
                                     '}(END| |~)$');
-                newText = origText.replace(re, newText + '\n');
+                newText = origText.replace(re, newText);
                 this.setText(newText);
             }
 
@@ -541,6 +541,10 @@ Environment variables:
                     break;
                }
                return false;
+            });
+
+            $(window).resize(function(e) {
+                outputTextArea.addText('');
             });
         });
     </script>
