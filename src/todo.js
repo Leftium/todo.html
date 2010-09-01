@@ -6,6 +6,40 @@ function zip() {
     return Array.prototype.slice.call(arguments).join(' ');
 }
 
+// Map of key-value pairs
+// Stored in HTML DOM inside #store <div>
+function Store()
+{
+    var $store = $('#store');
+    var map = {};
+
+    $store.find('pre').each(function() {
+        map[this.id] = $(this).text();
+    });
+
+    this.get = function(key) {
+        return map[key];
+    }
+
+    this.getAll = function() {
+        return map;
+    }
+
+    this.set = function(key, value) {
+        map[key] = value;
+
+        $key = $store.find('#' + key);
+
+        if ($key.length == 0) {
+            $store.append('<pre id="' + key + '">' + value + '</pre>\n');
+        } else {
+            $key.text(value);
+        }
+        // TODO: write changes to file or at least mark as dirty
+        return value;
+    }
+}
+
 // Encapsulates functionality to display text output to a <textarea>
 function OutputTextArea(jqObject)
 {
@@ -265,6 +299,11 @@ jQuery(function() {
             break;
        }
        return false;
+    });
+
+    $(window).load(function () {
+        // twFile is initialized when load() event triggered.
+        window.store = new Store();
     });
 
     $(window).resize(function(e) {
