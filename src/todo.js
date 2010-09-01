@@ -163,6 +163,11 @@ jQuery(function() {
     outputTextArea.setText(document.title + '\n\n' +
                            getText('usage') + '\n');
 
+    // Expose ability to print from command line
+    window.print = function(text) {
+        outputTextArea.addText(text);
+    }
+
     function doCommand(command) {
         var result = '';
         var match  = command.match(/^\s*([^\s]+)\s*(.*)/)
