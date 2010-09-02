@@ -4,7 +4,7 @@
 
 var saveUsingSafari = false;
 
-var startSaveArea = '<div id="' + 'storeArea">'; // Split up into two so that indexOf() of this source doesn't find it
+var startSaveArea = '<div id="' + 'store">'; // Split up into two so that indexOf() of this source doesn't find it
 var endSaveArea = '</d' + 'iv>';
 
 // If there are unsaved changes, force the user to confirm before exitting

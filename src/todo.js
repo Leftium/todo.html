@@ -6,6 +6,71 @@ function zip() {
     return Array.prototype.slice.call(arguments).join(' ');
 }
 
+// Strip whitespace from start and end;
+// Strip '\' and '/' from end of filepath.
+function cleanPath(str)
+{
+    var start = 0;
+    var end   = str.length - 1;
+
+    while((start < end) && ' \t'.indexOf(str[start]) != -1) start++;
+    while((start < end) && ' \t\\/'.indexOf(str[end]) != -1) end--;
+
+    return str.substring(start, end + 1);
+}
+
+// Write DOM to file
+function saveDomToFile(filepath)
+{
+    // Default to the file itself if no other filepath given
+    if (typeof(filepath) == 'undefined')
+    {
+        // Get the current file
+        var location_href = document.location.href;
+        // Convert the path to a readable format
+        filepath = $.twFile.convertUriToLocalPath(location_href);
+    } else {
+        filepath = cleanPath(filepath);
+
+        // Check if no path; only filename given
+        if (filepath.indexOf('\\') == -1 &&
+            filepath.indexOf('/')  == -1)
+        {
+            // Prepend the current path //
+
+            // Get the current file
+            var location_href = document.location.href;
+            // Convert the path to a readable format
+            var path = cleanPath($.twFile.convertUriToLocalPath(location_href));
+
+            var endOfPath = Math.max(path.lastIndexOf('\\'),
+                                     path.lastIndexOf('/'));
+
+            path = path.substring(0, endOfPath + 1);
+
+            filepath = path + filepath;
+        }
+    }
+
+    // Can't get doctype from Javascript/DOM.
+    // This needs to match actual HTML doctype.
+    var doctype = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">\n';
+
+    var $htmlClone = $('html').clone();
+
+    $htmlClone.find('#removeme').remove();
+    $htmlClone.find("applet[name='TiddlySaver']").remove();
+    var text = $htmlClone.attr('outerHTML');
+
+    if (text === undefined) {
+        text = new XMLSerializer().serializeToString($htmlClone[0]);
+    }
+
+    text = doctype + text;
+
+    return $.twFile.save(filepath, text);
+}
+
 // Map of key-value pairs
 // Stored in HTML DOM inside #store <div>
 function Store()
@@ -35,8 +100,12 @@ function Store()
         } else {
             $key.text(value);
         }
-        // TODO: write changes to file or at least mark as dirty
+        // saveDomToFile();
         return value;
+    }
+
+    this.html = function() {
+        return $store.html();
     }
 }
 
@@ -125,11 +194,21 @@ function CommandTextArea(jqObject)
     /// Public Members ///
 
     this.add = function(command) {
-       // Remove command from history
-       history = $.grep(history, function (c) { return c != command; });
+       var tmpHistory = _getHistory();
 
-       history.splice(history.length - 1, 0, command);
-       place = history.length - 1;
+       // Remove command from history
+       tmpHistory = $.grep(tmpHistory, function (c) { return c != command; });
+
+       tmpHistory.splice(tmpHistory.length - 1, 0, command);
+
+       // Limit history length
+       if (tmpHistory.length > 100) {
+           tmpHistory.splice(0, tmpHistory.length - 100 - 1);
+       }
+
+       place = tmpHistory.length - 1;
+
+       _setHistory(tmpHistory);
     }
 
     this.clear = function() {
@@ -140,19 +219,28 @@ function CommandTextArea(jqObject)
         if (goingUp) {
             place = Math.max(place - 1, 0);
         } else {
-            place = Math.min(place + 1, history.length - 1);
+            place = Math.min(place + 1, _getHistory().length - 1);
         }
-        jqObject.val(history[place]);
+        jqObject.val(_getHistory()[place]);
     }
 
     this.getHistory = function() {
         // Leave off last "blank" history item.
-        return history.slice(0,history.length - 1);
+        return _getHistory().slice(0, _getHistory().length - 1);
     }
 
     /// Private Members ///
-    var place = 0;
-    var history = [''];
+    var _getHistory = function()
+    {
+        return store.get('_HISTORY').split('\n');
+    }
+
+    var _setHistory = function(newHistory)
+    {
+        return store.set('_HISTORY', newHistory.join('\n'));
+    }
+
+    var place = _getHistory().length - 1;
 }
 
 function getText(id)
@@ -207,6 +295,8 @@ $(window).load(function() {
         this[0].scrollHeight;
         return this[0].scrollHeight;
     };
+
+    window.store = new Store();
 
     var outputTextArea = new OutputTextArea($('#output'));
     outputTextArea.setMark();
