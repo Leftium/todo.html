@@ -182,8 +182,24 @@ function doJavaScript(jsString)
     return results;
 }
 
+function test()
+{
+var originalPath = document.location.toString();
+    var localPath = getLocalPath(originalPath);
+
+    var original = loadOriginal(localPath);
+    print(localPath);
+    // print(original);
+
+    var posDiv = false;
+
+    var revised = updateOriginal(original,posDiv,localPath);
+
+    print(revised);
+}
+
 // Run on document load
-jQuery(function() {
+$(window).load(function() {
     var $ = jQuery; // local alias
 
     // IE does not give the correct scrollHeight on the first call
@@ -301,13 +317,15 @@ jQuery(function() {
        return false;
     });
 
-    $(window).load(function () {
+    // $(window).load(function () {
         // twFile is initialized when load() event triggered.
         window.store = new Store();
-    });
+    // });
 
     $(window).resize(function(e) {
         outputTextArea.addText('');
     });
+
+    // test();
 });
 

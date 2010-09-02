@@ -59,15 +59,17 @@ function updateOriginal(original,posDiv,localPath)
 		return null;
 	}
 	var revised = original.substr(0,posDiv[0] + startSaveArea.length) + "\n" +
-				convertUnicodeToFileFormat(store.allTiddlersAsHtml()) + "\n" +
+				"MY STUFF" + "\n" +
 				original.substr(posDiv[1]);
-	var newSiteTitle = convertUnicodeToFileFormat(getPageTitle()).htmlEncode();
+	/*
+        var newSiteTitle = convertUnicodeToFileFormat(getPageTitle()).htmlEncode();
 	revised = revised.replaceChunk("<title"+">","</title"+">"," " + newSiteTitle + " ");
 	revised = updateLanguageAttribute(revised);
 	revised = updateMarkupBlock(revised,"PRE-HEAD","MarkupPreHead");
 	revised = updateMarkupBlock(revised,"POST-HEAD","MarkupPostHead");
 	revised = updateMarkupBlock(revised,"PRE-BODY","MarkupPreBody");
 	revised = updateMarkupBlock(revised,"POST-SCRIPT","MarkupPostBody");
+        */
 	return revised;
 }
 
@@ -90,7 +92,8 @@ function autoSaveChanges(onlyIfDirty,tiddlers)
 
 function loadOriginal(localPath)
 {
-	return loadFile(localPath);
+	// return loadFile(localPath);
+    return $.twFile.load(localPath)
 }
 
 // Save this tiddlywiki with the pending changes
@@ -189,7 +192,8 @@ function saveEmpty(localPath,original,posDiv)
 
 function getLocalPath(origPath)
 {
-	var originalPath = convertUriToUTF8(origPath,config.options.txtFileSystemCharSet);
+	// var originalPath = convertUriToUTF8(origPath,config.options.txtFileSystemCharSet);
+	var originalPath = origPath;
 	// Remove any location or query part of the URL
 	var argPos = originalPath.indexOf("?");
 	if(argPos != -1)
@@ -238,3 +242,4 @@ function getBackupPath(localPath,title,extension)
 	backupPath += (new Date()).convertToYYYYMMDDHHMMSSMMM() + "." + (extension || "html");
 	return backupPath;
 }
+
