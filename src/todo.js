@@ -52,23 +52,20 @@ function saveDomToFile(filepath)
         }
     }
 
-    // Can't get doctype from Javascript/DOM.
-    // This needs to match actual HTML doctype.
-    var doctype = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">\n';
+    var originalPath = document.location.toString();
+    var localPath = getLocalPath(originalPath);
+    var original = $.twFile.load(localPath);
 
-    var $htmlClone = $('html').clone();
+    var posDiv = locateStoreArea(original);
+	if(!posDiv) {
+		alert(config.messages.invalidFileError.format([localPath]));
+		return null;
+	}
+	var revised = original.substr(0,posDiv[0] + startSaveArea.length) + "\n" +
+				store.html() + "\n" +
+				original.substr(posDiv[1]);
 
-    $htmlClone.find('#removeme').remove();
-    $htmlClone.find("applet[name='TiddlySaver']").remove();
-    var text = $htmlClone.attr('outerHTML');
-
-    if (text === undefined) {
-        text = new XMLSerializer().serializeToString($htmlClone[0]);
-    }
-
-    text = doctype + text;
-
-    return $.twFile.save(filepath, text);
+    return $.twFile.save(filepath, revised);
 }
 
 // Map of key-value pairs
@@ -105,7 +102,7 @@ function Store()
     }
 
     this.html = function() {
-        return $store.html();
+        return $.trim($store.html()).replace(/<\/pre><pre/gi, '</pre>\n<pre');
     }
 }
 
@@ -232,7 +229,7 @@ function CommandTextArea(jqObject)
     /// Private Members ///
     var _getHistory = function()
     {
-        return store.get('_HISTORY').split('\n');
+        return store.get('_HISTORY').split(/\r\n|\r|\n/);
     }
 
     var _setHistory = function(newHistory)
@@ -268,6 +265,12 @@ function doJavaScript(jsString)
         results = results.toString();
     }
     return results;
+}
+
+function dh()
+{
+    return store.get('_HISTORY').split(/\r\n|\r|\n/).length + '#' +
+           store.get('_HISTORY').split(/\r\n|\r|\n/);
 }
 
 function test()
@@ -351,6 +354,7 @@ $(window).load(function() {
     }
 
     var commandTextArea = new CommandTextArea($('#command'));
+    window.cta = commandTextArea;
 
     // Input textarea gets the default focus
     $('#command').focus();
