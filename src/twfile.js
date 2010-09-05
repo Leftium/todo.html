@@ -19,7 +19,7 @@ Triple licensed under the BSD, MIT and GPL licenses:
 
 	$.extend($.twFile,{
 		currentDriver: null,
-		driverList: ["activeX", "mozilla", "tiddlySaver", "javaLiveConnect"],
+		driverList: ["tiddlySaver", "activeX","javaLiveConnect", "mozilla"],
 
 		// Loads the contents of a text file from the local file system
 		// filePath is the path to the file in these formats:
@@ -239,12 +239,12 @@ Triple licensed under the BSD, MIT and GPL licenses:
 	drivers.tiddlySaver = {
 		name: "tiddlySaver",
 		deferredInit: function() {
-			if(!document.applets["TiddlySaver"] && !$.browser.mozilla && !$.browser.msie && document.location.toString().substr(0,5) == "file:") {
+			if(!document.applets["TiddlySaver"] && /* !$.browser.mozilla && !$.browser.msie && */ document.location.toString().substr(0,5) == "file:") {
 				$(document.body).append("<applet style='position:absolute;left:-1px' name='TiddlySaver' code='TiddlySaver.class' archive='TiddlySaver.jar' width='1'height='1'></applet>");
 			}
 		},
 		isAvailable: function() {
-			return !!document.applets["TiddlySaver"];
+			return !!document.applets["TiddlySaver"] && document.applets["TiddlySaver"].isActive();
 		},
 		loadFile: function(filePath) {
 			var r;

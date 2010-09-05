@@ -6,73 +6,53 @@ function zip() {
     return Array.prototype.slice.call(arguments).join(' ');
 }
 
-// Strip whitespace from start and end;
-// Strip '\' and '/' from end of filepath.
-function cleanPath(str)
-{
-    var start = 0;
-    var end   = str.length - 1;
-
-    while((start < end) && ' \t'.indexOf(str[start]) != -1) start++;
-    while((start < end) && ' \t\\/'.indexOf(str[end]) != -1) end--;
-
-    return str.substring(start, end + 1);
-}
-
 // Write DOM to file
 function saveDomToFile(filepath)
 {
-    // Default to the file itself if no other filepath given
     if (typeof(filepath) == 'undefined')
     {
-        // Get the current file
-        var location_href = document.location.href;
-        // Convert the path to a readable format
-        filepath = $.twFile.convertUriToLocalPath(location_href);
+        // Default to the file itself if no other filepath given
+        filepath = $.twFile.convertUriToLocalPath(location.toString());
     } else {
-        filepath = cleanPath(filepath);
+        // Normalize filepath:
+        // Strip space, tab, from beginning.
+        // Strip space, tab, backslash, slash from end.
+        filepath = filepath.match(/^[ \t]*(.*?)[ \t\\\/]*$/)[1];
 
-        // Check if no path; only filename given
-        if (filepath.indexOf('\\') == -1 &&
-            filepath.indexOf('/')  == -1)
+        // Check if path ommitted; only filename given
+        if (filepath.search(/\\|\//) == -1)
         {
-            // Prepend the current path //
+            // Prepend working directory if only filename given.
+            // Otherwise default twFile path is in an odd place.
 
             // Get the current file
-            var location_href = document.location.href;
-            // Convert the path to a readable format
-            var path = cleanPath($.twFile.convertUriToLocalPath(location_href));
+            var path = $.twFile.convertUriToLocalPath(location.toString());
 
-            var endOfPath = Math.max(path.lastIndexOf('\\'),
-                                     path.lastIndexOf('/'));
-
-            path = path.substring(0, endOfPath + 1);
+            // Strip filename off
+            path = path.match(/^(.*[\\\/]).*?$/)[1];
 
             filepath = path + filepath;
         }
     }
 
-    var originalPath = document.location.toString();
-    var localPath = getLocalPath(originalPath);
+    var localPath = $.twFile.convertUriToLocalPath(location.toString());
     var original = $.twFile.load(localPath);
-
     var posDiv = locateStoreArea(original);
-	if(!posDiv) {
-		alert(config.messages.invalidFileError.format([localPath]));
-		return null;
-	}
-	var revised = original.substr(0,posDiv[0] + startSaveArea.length) + "\n" +
-				store.html() + "\n" +
-				original.substr(posDiv[1]);
 
-    return $.twFile.save(filepath, revised);
+    if (posDiv) {
+        var revised = original.substr(0,posDiv[0] + startSaveArea.length) +
+                      "\n" + store.html() + "\n" + original.substr(posDiv[1]);
+        return $.twFile.save(filepath, revised);
+    } else {
+        return null;
+    }
 }
 
 // Map of key-value pairs
 // Stored in HTML DOM inside #store <div>
 function Store()
 {
-    var $store = $('#store');
+    var $store = $('#storeArea');
     var map = {};
 
     $store.find('pre').each(function() {
@@ -267,30 +247,8 @@ function doJavaScript(jsString)
     return results;
 }
 
-function dh()
-{
-    return store.get('_HISTORY').split(/\r\n|\r|\n/).length + '#' +
-           store.get('_HISTORY').split(/\r\n|\r|\n/);
-}
-
-function test()
-{
-var originalPath = document.location.toString();
-    var localPath = getLocalPath(originalPath);
-
-    var original = loadOriginal(localPath);
-    print(localPath);
-    // print(original);
-
-    var posDiv = false;
-
-    var revised = updateOriginal(original,posDiv,localPath);
-
-    print(revised);
-}
-
-// Run on document load
-$(window).load(function() {
+// Run on document ready
+$(function() {
     var $ = jQuery; // local alias
 
     // IE does not give the correct scrollHeight on the first call
@@ -307,7 +265,7 @@ $(window).load(function() {
                            getText('usage') + '\n');
 
     // Expose ability to print from command line
-    window.print = function(text) {
+    window.printLn = function(text) {
         outputTextArea.addText(text);
     }
 
@@ -345,13 +303,19 @@ $(window).load(function() {
                    action == 'hi') {
             result += commandTextArea.getHistory().join('\n');
 
+        } else if (action == 'set' ||
+                   action == 's') {
+            if (args.length == 1) {
+                 asdf
+             } else if (args.length == 2) {
+                store.set(args[0], args[1]);
+            }
         } else {
             // default to JavaScript
             result += doJavaScript(command);
         }
-
-        return result;
-    }
+        return result  ;
+      }
 
     var commandTextArea = new CommandTextArea($('#command'));
     window.cta = commandTextArea;
@@ -411,15 +375,8 @@ $(window).load(function() {
        return false;
     });
 
-    // $(window).load(function () {
-        // twFile is initialized when load() event triggered.
-        window.store = new Store();
-    // });
-
     $(window).resize(function(e) {
         outputTextArea.addText('');
     });
-
-    // test();
 });
 
