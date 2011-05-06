@@ -77,7 +77,23 @@ Triple licensed under the BSD, MIT and GPL licenses:
 				localPath = "\\\\" + unescape(originalPath.substr(7)).replace(new RegExp("/","g"),"\\");
 			return localPath || originalPath;
 		},
-		
+
+        available: function(handler) {
+            if (initDone) {
+                handler();
+            } else {
+                onAvailableHanders.push(handler);
+            }
+        },
+
+        unavailable: function(handler) {
+            if (triesLeft <= 0 && !initDone) {
+                handler();
+            } else {
+                onUnavailableHanders.push(handler);
+            }
+        },
+
 		// Private functions
 		
 		// Returns a reference to the current driver
@@ -98,7 +114,35 @@ Triple licensed under the BSD, MIT and GPL licenses:
 			if(drivers[t].deferredInit)
 				drivers[t].deferredInit();
 		}
+
+        // If called too soon, Opera fails to initialize TiddlySaver
+        setTimeout(checkUntilAvailable, ($.browser.opera ? 100 : 0));
 	});
+
+
+    var initDone = false;
+    var triesLeft = 2;
+    var onAvailableHanders = [];
+    var onUnavailableHanders = [];
+    var thisFileLocalPath = $.twFile.convertUriToLocalPath(document.location.toString());
+
+    // Waits until load() method works
+    // then calls all available event handlers
+    var checkUntilAvailable =  function() {
+        initDone = !!$.twFile.load(thisFileLocalPath);
+        if (!initDone) alert('Failed to init! Tries left:' + (triesLeft-1));
+        if (initDone) {
+            for (i in onAvailableHanders) {
+                onAvailableHanders[i]();
+            }
+        } else if(triesLeft-- > 1) {
+            setTimeout(checkUntilAvailable, 100);
+        } else {
+            for (i in onUnavailableHanders) {
+                onUnavailableHanders[i]();
+            }
+        }
+    };
 
 	// Private driver implementations for each browser
 
@@ -244,7 +288,17 @@ Triple licensed under the BSD, MIT and GPL licenses:
 			}
 		},
 		isAvailable: function() {
-			return !!document.applets["TiddlySaver"] && document.applets["TiddlySaver"].isActive();
+			var isReady = false;
+
+			try {
+				isReady = !!document.applets["TiddlySaver"] &&
+						  ($.browser.msie || document.applets["TiddlySaver"].isActive) &&
+						  ( document.applets["TiddlySaver"].isActive() );
+			} catch (ex) {
+				isReady = false;
+			}
+
+			return isReady;
 		},
 		loadFile: function(filePath) {
 			var r;

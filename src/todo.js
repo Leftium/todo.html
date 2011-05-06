@@ -378,5 +378,8 @@ $(function() {
     $(window).resize(function(e) {
         outputTextArea.addText('');
     });
+
+    $.twFile.unavailable(function() { printLn('Gave up!')} );
+    $.twFile.available(function() { printLn('Using driver:' + $.twFile.getDriver().name)} );
 });
 
