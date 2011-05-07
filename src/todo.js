@@ -1,5 +1,4 @@
 var DEBUG = false;
-var PADDING_ON = false;
 
 // Utility method to join variables and strings
 function zip() {
@@ -132,85 +131,6 @@ function CliOutput($jqObject)
 
 }
 
-// Encapsulates functionality to display text output to a <textarea>
-function OutputTextArea(jqObject)
-{
-    /// Public Members ///
-
-    this.setText = function(text) {
-        jqObject.val(text + padding());
-    }
-
-    this.addText = function(newText) {
-        if (newText != '') newText += '\n';
-
-        var origText = jqObject.val();
-        // Replace padding with newText
-        var re = new RegExp('((PADDING:\\d*)*\\n){' + paddingLines +
-                            '}(END| |~)$');
-        newText = origText.replace(re, newText);
-        this.setText(newText);
-    }
-
-    this.setMark = function() {
-        markScrollHeight = jqObject.scrollHeight() - lineHeight;
-    }
-
-    this.gotoMark = function () {
-        jqObject.scrollTop(markScrollHeight - markPadding);
-    }
-
-    this.page = function (isPageUp) {
-        var scrollDistance = (isPageUp ? -1 : 1);
-        scrollDistance *= jqObject[0].clientHeight - 3*lineHeight;
-
-        jqObject.scrollTop(jqObject.scrollTop() + scrollDistance);
-    }
-
-
-    /// Private Members ///
-
-    // Calculate how tall the textarea font is using a dummy textarea
-    var lineHeight = function () {
-        var ta = $('<textarea rows=1 id=removeme></textarea>');
-        $('body').append(ta);
-
-        ta.val('\n');
-        var oldHeight = ta.scrollHeight();
-        ta.val('\n\n');
-        var newHeight = ta.scrollHeight();
-
-        $('#removeme').empty();
-        return newHeight - oldHeight;
-    }();
-
-    // Returns string of newlines used to force <textarea>'s
-    // scrollHeight to increase when a line is added. Also allows
-    // scrolling text to top even if textarea is not filled, yet.
-    // Computes a new string every time, in case the textarea was
-    // resized.
-    var padding = function() {
-        var ret    = (PADDING_ON ? 'END' : ' ');
-
-        paddingLines = Math.floor(jqObject[0].clientHeight /
-                                  lineHeight);
-        markPadding  = paddingLines * lineHeight;
-
-        for (var i = 0; i < paddingLines; i++) {
-            ret = (PADDING_ON ? 'PADDING:' + (i+1) : '') + '\n' + ret;
-        }
-        return ret;
-    };
-
-    var markPadding;
-    var markScrollHeight;
-    // Number of newlines in padding string. Automatically updated
-    // when padding() constructs padding string.
-    var paddingLines = 0;
-
-    this.setMark();
-}
-
 // Maintains command history.
 function CommandTextArea(jqObject)
 {
@@ -305,11 +225,6 @@ $(function() {
 
     window.store = new Store();
 
-    var outputTextArea = new OutputTextArea($('#output'));
-    outputTextArea.setMark();
-    outputTextArea.setText(document.title + '\n\n' +
-                           getText('usage') + '\n');
-
     var cliOutput = new CliOutput($('#cli-output'));
     cliOutput.addText(document.title + '\n\n' +
                            getText('usage') + '\n');
@@ -317,7 +232,6 @@ $(function() {
 
     // Expose ability to print from command line
     window.printLn = function(text) {
-        outputTextArea.addText(text);
         cliOutput.addText(text);
     }
 
@@ -346,7 +260,6 @@ $(function() {
         } else if (action == 'clear' ||
                    action == 'clr'   ||
                    action == 'c') {
-            outputTextArea.setText('');
             cliOutput.clear();
 
         } else if (action == 'js' || action == 'j') {
@@ -388,37 +301,24 @@ $(function() {
             var command = $.trim($('#cli-input').val());
             if (command == '') {
                 // Snap to beginning of last output
-                outputTextArea.gotoMark();
                 cliOutput.gotoMark();
                 commandTextArea.clear();
             } else {
                 commandTextArea.add(command);
 
-                outputTextArea.setMark();
-                outputTextArea.addText('>' + command);
-
                 cliOutput.addText('>' + command);
                 cliOutput.setMark();
 
-                var results = doCommand(command);
-                outputTextArea.addText(results);
-                cliOutput.addText(results);
-
-                // Delay to ensure <textarea> has updated
-                setTimeout(function() {
-                    // Snap to beginning of output
-                    outputTextArea.gotoMark();
-                    cliOutput.gotoMark();
-                    $('#cli-input').focus();
-                }, 0);
+                cliOutput.addText(doCommand(command));
 
                 commandTextArea.clear();
+                cliOutput.gotoMark();
+                $('#cli-input').focus();
             }
             break;
 
           case 33: // page up
           case 34: // page down
-            outputTextArea.page(e.which == 33);
             cliOutput.page(e.which == 33);
             break;
 
@@ -436,10 +336,6 @@ $(function() {
             break;
        }
        return false;
-    });
-
-    $(window).resize(function(e) {
-        outputTextArea.addText('');
     });
 
     $.twFile.unavailable(function() { printLn('Gave up!')} );

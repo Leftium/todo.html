@@ -7,7 +7,7 @@
     background: blue;
 }
 
-#cli-output-wrapper, #container2, #cli-input-wrapper {
+#cli-output-wrapper, #cli-input-wrapper {
     position: absolute;
     width: 100%;
 }
@@ -15,12 +15,6 @@
 #cli-output-wrapper {
     top: 0;
     bottom: 30px;
-}
-
-#container2 {
-    visibility:hidden;
-    top: 51%;
-    bottom: 21px;
 }
 
 #cli-input-wrapper {
@@ -42,13 +36,7 @@
     height: 101%;
 }
 
-#outputDiv, #commandDiv {
-    height:100%;
-    width: 100%;
-    padding: 0px;
-}
-
-#output, #cli-input {
+#cli-input {
     margin: 0;
     border: 0;
     padding: 0;
