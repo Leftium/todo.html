@@ -1,26 +1,26 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>todo.html by leftium@gmail.com v@VERSION</title>
-    <link rel="stylesheet" type="text/css" href="todo.css" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>todo.html by leftium@gmail.com v@VERSION</title>
+  <link rel="stylesheet" type="text/css" href="todo.css" />
 </head>
 <body>
 
 <div id="storeArea">
-<pre id="TODO_DIR">todo dir value</pre>
-<pre id="TODO_FILE">todo file value</pre>
-<pre id="DONE_FILE">done file value</pre>
-<pre id="REPORT_FILE">report file value</pre>
-<pre id="TMP_FILE">tmp file value</pre>
-<pre id="_TODO">_todo value</pre>
-<pre id="_HISTORY"></pre>
+  <pre id="TODO_DIR">todo dir value</pre>
+  <pre id="TODO_FILE">todo file value</pre>
+  <pre id="DONE_FILE">done file value</pre>
+  <pre id="REPORT_FILE">report file value</pre>
+  <pre id="TMP_FILE">tmp file value</pre>
+  <pre id="_TODO">_todo value</pre>
+  <pre id="_HISTORY"></pre>
 </div>
 <!--POST-STOREAREA-->
 <!--POST-BODY-START-->
 
-    <pre id='usage'>Usage: [-fhpantvV] [-d todo_config] action [task_number] [task_description]</pre>
-    <pre id='shorthelp'>Actions:
+  <pre id='usage'>Usage: [-fhpantvV] [-d todo_config] action [task_number] [task_description]</pre>
+  <pre id='shorthelp'>Actions:
   add|a "THING I NEED TO DO +project @context"
   addto DEST "TEXT TO ADD"
   addm "THINGS I NEED TO DO
@@ -46,7 +46,7 @@
 
 See "help" for more details.</pre>
 
-<pre id=help>Actions:
+  <pre id=help>Actions:
   add "THING I NEED TO DO +project @context"
   a "THING I NEED TO DO +project @context"
     Adds THING I NEED TO DO to your todo.txt file on its own line.
@@ -196,21 +196,31 @@ Environment variables:
   TODOTXT_SORT_COMMAND="sort ..." customize list output
   TODOTXT_FINAL_FILTER="sed ..."  customize list after color, P@+ hiding</pre>
 
-    <div id="appDiv">
-        <div id="outputDiv" >
-            <textarea id=output readonly=readonly ></textarea>
-        </div>
-        <div id="commandDiv" >
-            <input id=command type="text" ></input>
-        </div>
+  <div id='cli-box'>
+    <div id='cli-output-wrapper'>
+      <div id='cli-output'>
+        <div id='scroll-padding'></div>
+      </div>
     </div>
 
-    <script type="text/javascript" src="split.js" ></script>
-    <script type="text/javascript" src="jquery.js" ></script>
-    <script type="text/javascript" src="twfile.js" ></script>
-    <script type="text/javascript" src="date.js"   ></script>
-    <script type="text/javascript" src="saving.js" ></script>
-    <script type="text/javascript" src="todo.js"   ></script>
+    <div id='container2'>
+      <div id='outputDiv'>
+        <textarea id=output readonly=readonly></textarea>
+      </div>
+    </div>
+
+    <div id='cli-input-wrapper'>
+      <input id='cli-input' type='text'></input>
+    </div>
+
+  </div> <!-- cli-box -->
+
+  <script type="text/javascript" src="split.js" ></script>
+  <script type="text/javascript" src="jquery.js" ></script>
+  <script type="text/javascript" src="twfile.js" ></script>
+  <script type="text/javascript" src="date.js"   ></script>
+  <script type="text/javascript" src="saving.js" ></script>
+  <script type="text/javascript" src="todo.js"   ></script>
 </body>
 
 </html>

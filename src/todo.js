@@ -86,6 +86,52 @@ function Store()
     }
 }
 
+function CliOutput($jqObject)
+{
+    this.$scrollPadding = $jqObject.children('#scroll-padding');
+    this.commandCount = 0;
+
+    this.addText = function(newText) {
+        this.commandCount++;
+        newText = newText.replace(/ /g, '&nbsp;');
+        newText = newText.replace(/\n/g, '<br />');
+        this.$scrollPadding.before('<div id="MARK_' + this.commandCount + '">' + newText + '</div>');
+    }
+
+    this.clear = function() {
+        $jqObject.children(':not(#scroll-padding)').remove();
+    }
+
+    this.setMark = function() {
+        this.mark = 'MARK_' + this.commandCount;
+    }
+
+    this.gotoMark = function() {
+        var target_position = $('#'+this.mark).position();
+        var target_top = target_position.top + $('#cli-output').scrollTop();
+
+        $('#cli-output').animate({scrollTop:target_top}, 200);
+    }
+
+    this.page = function (isPageUp) {
+        var scrollDistance = (isPageUp ? -1 : 1);
+        scrollDistance *= $jqObject[0].clientHeight - 3*lineHeight;
+
+        $jqObject.scrollTop($jqObject.scrollTop() + scrollDistance);
+    }
+
+    // Calculate how tall the textarea font is using a dummy div
+    var lineHeight = function () {
+        var ta = $('<div rows=1 id=remove-me>TEST DIV</div>');
+        $jqObject.children('#scroll-padding').append(ta);
+
+        var height = ta.height();
+        $('#remove-me').empty();
+        return height;
+    }();
+
+}
+
 // Encapsulates functionality to display text output to a <textarea>
 function OutputTextArea(jqObject)
 {
@@ -264,9 +310,15 @@ $(function() {
     outputTextArea.setText(document.title + '\n\n' +
                            getText('usage') + '\n');
 
+    var cliOutput = new CliOutput($('#cli-output'));
+    cliOutput.addText(document.title + '\n\n' +
+                           getText('usage') + '\n');
+    cliOutput.setMark();
+
     // Expose ability to print from command line
     window.printLn = function(text) {
         outputTextArea.addText(text);
+        cliOutput.addText(text);
     }
 
     function doCommand(command) {
@@ -295,6 +347,7 @@ $(function() {
                    action == 'clr'   ||
                    action == 'c') {
             outputTextArea.setText('');
+            cliOutput.clear();
 
         } else if (action == 'js' || action == 'j') {
             result += doJavaScript(args);
@@ -317,37 +370,46 @@ $(function() {
         return result  ;
       }
 
-    var commandTextArea = new CommandTextArea($('#command'));
+    var commandTextArea = new CommandTextArea($('#cli-input'));
     window.cta = commandTextArea;
 
     // Input textarea gets the default focus
-    $('#command').focus();
+    $('#cli-input').focus();
 
     // Intercept newlines in #command <textarea>
-    $('#command').keypress(function(e) {
+    $('#cli-input').keypress(function(e) {
         return (e.which != 13);
     });
 
     // Some keys have a special purpose:
-    $('#command').keydown(function(e) {
+    $('#cli-input').keydown(function(e) {
         switch (e.which) {
           case 13: // return
-            var command = $.trim($('#command').val());
+            var command = $.trim($('#cli-input').val());
             if (command == '') {
                 // Snap to beginning of last output
                 outputTextArea.gotoMark();
+                cliOutput.gotoMark();
                 commandTextArea.clear();
             } else {
                 commandTextArea.add(command);
 
                 outputTextArea.setMark();
                 outputTextArea.addText('>' + command);
-                outputTextArea.addText(doCommand(command));
+
+                cliOutput.addText('>' + command);
+                cliOutput.setMark();
+
+                var results = doCommand(command);
+                outputTextArea.addText(results);
+                cliOutput.addText(results);
 
                 // Delay to ensure <textarea> has updated
                 setTimeout(function() {
                     // Snap to beginning of output
                     outputTextArea.gotoMark();
+                    cliOutput.gotoMark();
+                    $('#cli-input').focus();
                 }, 0);
 
                 commandTextArea.clear();
@@ -357,6 +419,7 @@ $(function() {
           case 33: // page up
           case 34: // page down
             outputTextArea.page(e.which == 33);
+            cliOutput.page(e.which == 33);
             break;
 
           case 38: // up
