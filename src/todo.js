@@ -234,12 +234,6 @@ function doJavaScript(jsString)
 $(function() {
     var $ = jQuery; // local alias
 
-    // IE does not give the correct scrollHeight on the first call
-    $.fn.scrollHeight = function() {
-        this[0].scrollHeight;
-        return this[0].scrollHeight;
-    };
-
     window.store = new Store();
 
     var cliOutput = new CliOutput($('#cli-output'));
