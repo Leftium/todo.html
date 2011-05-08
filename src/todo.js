@@ -341,7 +341,20 @@ $(function() {
     });
 
     $.twFile.initialize().then(function() {
-        printLn('INITIALIZED! Using driver:' + $.twFile.getDriver().name);
+        var filepath = document.location.href;               // Get the current file
+
+        filepath = $.twFile.convertUriToLocalPath(filepath); // Convert the path to a readable format
+        // filepath = filepath.replace(/html$/,'txt');
+
+        printLn('\nINITIALIZED! Using driver: ' + $.twFile.getDriver().name);
+        printLn('document.location.href: ' + document.location.href);
+        printLn('filepath: ' + filepath);
+
+        var contents = $.twFile.load(filepath);
+
+        printLn('length: ' + contents.length);
+        printLn('contents:\n'+ contents);
+        printLn('END contents');
     });
 });
 
