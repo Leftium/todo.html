@@ -61,7 +61,7 @@ function saveDomToFile(filepath)
 // Stored in HTML DOM inside #store <div>
 function Store()
 {
-    var $store = $('#storeArea');
+    var $store = $('#store-area');
     var map = {};
 
     $store.find('pre').each(function() {
@@ -192,12 +192,12 @@ function CommandTextArea(jqObject)
     /// Private Members ///
     var _getHistory = function()
     {
-        return store.get('_HISTORY').split(/\r\n|\r|\n/);
+        return store.get('history').split(/\r\n|\r|\n/);
     }
 
     var _setHistory = function(newHistory)
     {
-        return store.set('_HISTORY', newHistory.join('\n'));
+        return store.set('history', newHistory.join('\n'));
     }
 
     var place = _getHistory().length - 1;
