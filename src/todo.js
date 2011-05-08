@@ -338,7 +338,8 @@ $(function() {
        return false;
     });
 
-    $.twFile.unavailable(function() { printLn('Gave up!')} );
-    $.twFile.available(function() { printLn('Using driver:' + $.twFile.getDriver().name)} );
+    $.twFile.initialize().then(function() {
+        printLn('INITIALIZED! Using driver:' + $.twFile.getDriver().name);
+    });
 });
 

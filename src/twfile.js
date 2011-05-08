@@ -78,21 +78,18 @@ Triple licensed under the BSD, MIT and GPL licenses:
 			return localPath || originalPath;
 		},
 
-        available: function(handler) {
-            if (initDone) {
-                handler();
-            } else {
-                onAvailableHanders.push(handler);
-            }
-        },
-
-        unavailable: function(handler) {
-            if (triesLeft <= 0 && !initDone) {
-                handler();
-            } else {
-                onUnavailableHanders.push(handler);
-            }
-        },
+		// Deferred initialization for any drivers that need it
+		// returns a Deferred object so callback that executes as soon
+		// as twFile is ready can be attached
+		initialize: function() {
+			return $.Deferred(function(dfd) {
+				for(var t in drivers) {
+					if(drivers[t].deferredInit)
+						drivers[t].deferredInit();
+				}
+				dfd.resolve();
+			});
+		},
 
 		// Private functions
 		
@@ -108,41 +105,10 @@ Triple licensed under the BSD, MIT and GPL licenses:
 		}
 	});
 
-	// Deferred initialisation for any drivers that need it
+	// Automatically initialize on document.ready()
 	$(function() {
-		for(var t in drivers) {
-			if(drivers[t].deferredInit)
-				drivers[t].deferredInit();
-		}
-
-        // If called too soon, Opera fails to initialize TiddlySaver
-        setTimeout(checkUntilAvailable, ($.browser.opera ? 100 : 0));
+		$.twFile.initialize();
 	});
-
-
-    var initDone = false;
-    var triesLeft = 2;
-    var onAvailableHanders = [];
-    var onUnavailableHanders = [];
-    var thisFileLocalPath = $.twFile.convertUriToLocalPath(document.location.toString());
-
-    // Waits until load() method works
-    // then calls all available event handlers
-    var checkUntilAvailable =  function() {
-        initDone = !!$.twFile.load(thisFileLocalPath);
-        if (!initDone) alert('Failed to init! Tries left:' + (triesLeft-1));
-        if (initDone) {
-            for (i in onAvailableHanders) {
-                onAvailableHanders[i]();
-            }
-        } else if(triesLeft-- > 1) {
-            setTimeout(checkUntilAvailable, 100);
-        } else {
-            for (i in onUnavailableHanders) {
-                onUnavailableHanders[i]();
-            }
-        }
-    };
 
 	// Private driver implementations for each browser
 
