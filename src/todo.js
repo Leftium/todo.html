@@ -97,9 +97,6 @@ function Store()
 
 function CliOutput($jqObject)
 {
-    this.$scrollPadding = $jqObject.children('#scroll-padding');
-    this.commandCount = 0;
-
     this.addText = function(newText) {
         this.commandCount++;
 
@@ -144,6 +141,10 @@ function CliOutput($jqObject)
         $('#remove-me').empty();
         return height;
     }();
+
+    this.$scrollPadding = $jqObject.children('#scroll-padding');
+    this.commandCount = 0;
+    this.setMark();
 
 }
 
