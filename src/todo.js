@@ -5,6 +5,16 @@ function zip() {
     return Array.prototype.slice.call(arguments).join(' ');
 }
 
+function htmlEncode(s)
+{
+  var el = document.createElement("div");
+  el.innerText = el.textContent = s;
+  s = el.innerHTML;
+  delete el;
+  return s;
+}
+
+
 // Write DOM to file
 function saveDomToFile(filepath)
 {
@@ -92,11 +102,15 @@ function CliOutput($jqObject)
 
     this.addText = function(newText) {
         this.commandCount++;
-        newText = newText.replace(/</g, '&lt;');
-        newText = newText.replace(/>/g, '&gt;');
-        newText = newText.replace(/ /g, '&nbsp;');
-        newText = newText.replace(/\n/g, '<br />');
-        this.$scrollPadding.before('<div id="MARK_' + this.commandCount + '">' + newText + '</div>');
+
+        newText = htmlEncode(newText)
+                      .replace(/ /g, '&nbsp;')
+                      .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+
+        $('<div />')
+            .attr('id', '"MARK_' + this.commandCount + '"')
+            .html(newText)
+            .insertBefore(this.$scrollPadding);
     }
 
     this.clear = function() {
