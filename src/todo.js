@@ -5,16 +5,6 @@ function zip() {
     return Array.prototype.slice.call(arguments).join(' ');
 }
 
-function htmlEncode(s)
-{
-  var el = document.createElement("div");
-  el.innerText = el.textContent = s;
-  s = el.innerHTML;
-  delete el;
-  return s;
-}
-
-
 // Write DOM to file
 function saveDomToFile(filepath)
 {
@@ -100,9 +90,11 @@ function CliOutput($jqObject)
     this.addText = function(newText) {
         this.commandCount++;
 
-        newText = htmlEncode(newText)
-                      .replace(/ /g, '&nbsp;')
-                      .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+        newText = newText.replace(/ /g, '&nbsp;')
+                      .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/\n/g, '<br />');
 
         $('<div />')
             .attr('id', 'MARK_' + this.commandCount)
