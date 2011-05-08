@@ -87,7 +87,8 @@ Triple licensed under the BSD, MIT and GPL licenses:
 					if(drivers[t].deferredInit)
 						drivers[t].deferredInit();
 				}
-				dfd.resolve();
+				// Kludge: give the <applet> some time to load
+				setTimeout(dfd.resolve, 0);
 			});
 		},
 
