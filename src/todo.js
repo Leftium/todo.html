@@ -105,7 +105,7 @@ function CliOutput($jqObject)
                       .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
 
         $('<div />')
-            .attr('id', '"MARK_' + this.commandCount + '"')
+            .attr('id', 'MARK_' + this.commandCount)
             .html(newText)
             .insertBefore(this.$scrollPadding);
     }
