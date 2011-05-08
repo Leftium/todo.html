@@ -92,6 +92,8 @@ function CliOutput($jqObject)
 
     this.addText = function(newText) {
         this.commandCount++;
+        newText = newText.replace(/</g, '&lt;');
+        newText = newText.replace(/>/g, '&gt;');
         newText = newText.replace(/ /g, '&nbsp;');
         newText = newText.replace(/\n/g, '<br />');
         this.$scrollPadding.before('<div id="MARK_' + this.commandCount + '">' + newText + '</div>');
