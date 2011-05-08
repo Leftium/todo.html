@@ -12,14 +12,14 @@
     width: 100%;
 }
 
-#cli-output-wrapper {
+#cli-input-wrapper {
     top: 0;
-    bottom: 30px;
+    height: 20px;
 }
 
-#cli-input-wrapper {
+#cli-output-wrapper {
+    top: 22px;
     bottom: 0px;
-    height: 20px;
 }
 
 #cli-output {
