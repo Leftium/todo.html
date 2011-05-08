@@ -2,7 +2,7 @@
 //-- Saving
 //--
 
-var startSaveArea = '<div id="' + 'storeArea">'; // Split up into two so that indexOf() of this source doesn't find it
+var startSaveArea = '<div id="' + 'store-area">'; // Split up into two so that indexOf() of this source doesn't find it
 var endSaveArea = '</d' + 'iv>';
 
 function locateStoreArea(original)
