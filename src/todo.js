@@ -76,7 +76,7 @@ function Store()
         } else {
             $key.text(value);
         }
-        // saveDomToFile();
+        saveDomToFile();
         return value;
     }
 
@@ -274,6 +274,7 @@ $(function() {
 
         } else if (action == 'set' ||
                    action == 's') {
+            // TODO: fix: args is a string, not an array
             if (args.length == 1) {
                  asdf
              } else if (args.length == 2) {
