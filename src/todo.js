@@ -84,7 +84,6 @@ store = (function() {
 
 })();
 
-
 // Get html with updated #store-area from DOM
 updatedHtml = function() {
     var localPath = normalizedFilepath();
@@ -166,14 +165,14 @@ function CommandTextArea(jqObject)
        // Remove command from history
        tmpHistory = $.grep(tmpHistory, function (c) { return c != command; });
 
-       tmpHistory.splice(tmpHistory.length - 1, 0, command);
+       tmpHistory.splice(1, 0, command);
 
        // Limit history length
        if (tmpHistory.length > 100) {
            tmpHistory.splice(0, tmpHistory.length - 100 - 1);
        }
 
-       place = tmpHistory.length - 1;
+       place = 0;
 
        store.set('history', tmpHistory);
     }
@@ -186,7 +185,7 @@ function CommandTextArea(jqObject)
         if (goingUp) {
             place = Math.max(place - 1, 0);
         } else {
-            place = Math.min(place + 1, store.get('history').length - 1);
+            place = Math.min(place + 1, store.get('history').length);
         }
         jqObject.val(store.get('history')[place]);
     }
@@ -194,7 +193,7 @@ function CommandTextArea(jqObject)
     this.getHistory = function() {
         // Leave off last "blank" history item.
         var fullHistory = store.get('history');
-        return fullHistory.slice(0, fullHistory.length - 1);
+        return fullHistory.slice(1, fullHistory.length);
     }
 
     // Ensure history exists in store
@@ -202,7 +201,7 @@ function CommandTextArea(jqObject)
         store.set('history', [''])
     }
 
-    var place = store.get('history').length - 1;
+    var place = 0;
 }
 
 function getText(id)
