@@ -305,7 +305,6 @@ $(function() {
 
             if (setArgs[1] == '') {
                 // list all values
-                // printLn('TODO: list all values');
                 $.each(store.list(), function(key, value) {
                                          if (key.match(/^\$/)) {
                                              printLn(key.substr(1) + '=' + value);
@@ -323,6 +322,14 @@ $(function() {
         } else if (action == 'unset' ||
                    action == 'u') {
             store.remove('$' + args);
+
+        } else if (action == 'dir' ||
+                   action == 'd') {
+            $.each(store.list(), function(key, value) {
+                                     if (key.match(/^\#/)) {
+                                         printLn(key);
+                                     }
+                                 });
 
         } else {
             // default to JavaScript
