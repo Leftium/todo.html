@@ -8,7 +8,7 @@ function zip() {
 function normalizedFilepath(filepath) {
     if (filepath === undefined) {
         // Default to the file itself if no other filepath given
-        filepath = $.twFile.convertUriToLocalPath(location.toString());
+        filepath = $.twFile.convertUriToLocalPath(location.href);
     } else {
 
         // Strip space, tab, from beginning.
@@ -22,7 +22,7 @@ function normalizedFilepath(filepath) {
             // Otherwise default twFile path is in an odd place.
 
             // Get the current file
-            var path = $.twFile.convertUriToLocalPath(location.toString());
+            var path = $.twFile.convertUriToLocalPath(location.href);
 
             // Strip filename off
             path = path.match(/^(.*[\\\/]).*?$/)[1];
@@ -379,16 +379,11 @@ $(function() {
     });
 
     $.twFile.initialize().then(function() {
-        var filepath = document.location.href;               // Get the current file
-
-        filepath = $.twFile.convertUriToLocalPath(filepath); // Convert the path to a readable format
-        // filepath = filepath.replace(/html$/,'txt');
-
         printLn('\nINITIALIZED! Using driver: ' + $.twFile.getDriver().name);
         printLn('document.location.href: ' + document.location.href);
-        printLn('filepath: ' + filepath);
+        printLn('filepath: ' + normalizedFilepath());
 
-        var contents = $.twFile.load(filepath);
+        var contents = $.twFile.load(normalizedFilepath());
 
         printLn('length: ' + contents.length);
         printLn('contents:\n'+ contents);
