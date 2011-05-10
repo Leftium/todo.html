@@ -5,15 +5,12 @@ function zip() {
     return Array.prototype.slice.call(arguments).join(' ');
 }
 
-// Write DOM to file
-function saveDomToFile(filepath)
-{
-    if (typeof(filepath) == 'undefined')
-    {
+function normalizedFilepath(filepath) {
+    if (filepath === undefined) {
         // Default to the file itself if no other filepath given
         filepath = $.twFile.convertUriToLocalPath(location.toString());
     } else {
-        // Normalize filepath:
+
         // Strip space, tab, from beginning.
         // Strip space, tab, backslash, slash from end.
         filepath = filepath.match(/^[ \t]*(.*?)[ \t\\\/]*$/)[1];
@@ -33,55 +30,73 @@ function saveDomToFile(filepath)
             filepath = path + filepath;
         }
     }
-
-    var localPath = $.twFile.convertUriToLocalPath(location.toString());
-    var original = $.twFile.load(localPath);
-    var posDiv = locateStoreArea(original);
-
-    if (posDiv) {
-        var revised = original.substr(0,posDiv[0] + startSaveArea.length) +
-                      "\n" + store.html() + "\n" + original.substr(posDiv[1]);
-        return $.twFile.save(filepath, revised);
-    } else {
-        return null;
-    }
+    return filepath;
 }
 
-// Map of key-value pairs
-// Stored in HTML DOM inside #store <div>
-function Store()
-{
+store = (function() {
+    // only load "static" variables once
     var $store = $('#store-area');
     var map = {};
 
     $store.find('pre').each(function() {
-        map[this.id] = $(this).text();
+        map[this.id] = TAFFY.JSON.parse($(this).text());
     });
 
-    this.get = function(key) {
-        return map[key];
-    }
+    return {
+        get: function(name) {
+            // TODO: reload file if too much time has passed
+            return map[name];
+        },
 
-    this.getAll = function() {
-        return map;
-    }
+        set: function(name, value) {
+            // TODO: delayed, less frequent saving
+            map[name] = value;
+            $.twFile.save(normalizedFilepath(), updatedHtml());
+            return value;
+        },
 
-    this.set = function(key, value) {
-        map[key] = value;
+        list: function() {
+            return map;
+        },
 
-        $key = $store.find('#' + key);
+        remove: function(name) {
+            delete map[name];
+            $.twFile.save(normalizedFilepath(), updatedHtml());
+        },
 
-        if ($key.length == 0) {
-            $store.append('<pre id="' + key + '">' + value + '</pre>\n');
-        } else {
-            $key.text(value);
+        html: function() {
+              var $div = $('<div />');
+
+              $.each(map, function(key, value) {
+                  $('<pre />')
+                  .attr('id', key)
+                  .html(TAFFY.JSON.stringify(value))
+                  .appendTo($div);
+              });
+
+              return $.trim($div.html()
+                         .replace(/PRE/g, 'pre')
+                         .replace(/<\/pre><pre/g, '</pre>\n<pre')
+                     );
         }
-        saveDomToFile();
-        return value;
-    }
 
-    this.html = function() {
-        return $.trim($store.html()).replace(/<\/pre><pre/gi, '</pre>\n<pre');
+    };
+
+})();
+
+
+// Get html with updated #store-area from DOM
+updatedHtml = function() {
+    var localPath = normalizedFilepath();
+    var original = $.twFile.load(localPath);
+    var posDiv = locateStoreArea(original);
+
+    if (posDiv) {
+
+        return original.substr(0, posDiv[0] + startSaveArea.length) +
+               '\n' + store.html() + '\n' + original.substr(posDiv[1]);
+    } else {
+        return null;
     }
 }
 
@@ -146,7 +161,7 @@ function CommandTextArea(jqObject)
     /// Public Members ///
 
     this.add = function(command) {
-       var tmpHistory = _getHistory();
+       var tmpHistory = store.get('history');
 
        // Remove command from history
        tmpHistory = $.grep(tmpHistory, function (c) { return c != command; });
@@ -160,7 +175,7 @@ function CommandTextArea(jqObject)
 
        place = tmpHistory.length - 1;
 
-       _setHistory(tmpHistory);
+       store.set('history', tmpHistory);
     }
 
     this.clear = function() {
@@ -171,28 +186,23 @@ function CommandTextArea(jqObject)
         if (goingUp) {
             place = Math.max(place - 1, 0);
         } else {
-            place = Math.min(place + 1, _getHistory().length - 1);
+            place = Math.min(place + 1, store.get('history').length - 1);
         }
-        jqObject.val(_getHistory()[place]);
+        jqObject.val(store.get('history')[place]);
     }
 
     this.getHistory = function() {
         // Leave off last "blank" history item.
-        return _getHistory().slice(0, _getHistory().length - 1);
+        var fullHistory = store.get('history');
+        return fullHistory.slice(0, fullHistory.length - 1);
     }
 
-    /// Private Members ///
-    var _getHistory = function()
-    {
-        return store.get('history').split(/\r\n|\r|\n/);
+    // Ensure history exists in store
+    if (store.get('history') === undefined) {
+        store.set('history', [''])
     }
 
-    var _setHistory = function(newHistory)
-    {
-        return store.set('history', newHistory.join('\n'));
-    }
-
-    var place = _getHistory().length - 1;
+    var place = store.get('history').length - 1;
 }
 
 function getText(id)
@@ -225,8 +235,6 @@ function doJavaScript(jsString)
 // Run on document ready
 $(function() {
     var $ = jQuery; // local alias
-
-    window.store = new Store();
 
     var cliOutput = new CliOutput($('#cli-output'));
     cliOutput.addText(document.title + '\n\n' +
@@ -275,16 +283,45 @@ $(function() {
         } else if (action == 'set' ||
                    action == 's') {
             // TODO: fix: args is a string, not an array
-            if (args.length == 1) {
-                 asdf
-             } else if (args.length == 2) {
-                store.set(args[0], args[1]);
+            var setArgs = $.trim(args).match(/([^ \t]*)[ \t]*(.*)/);
+
+            /*
+            if (setArgs) {
+                printLn(setArgs.length.toString());
+                $.each(setArgs, function (i, v) {
+                    printLn('[' + v + ']');
+                });
+            } else {
+                printLn(args);
             }
+            */
+
+            if (setArgs[1] == '') {
+                // list all values
+                // printLn('TODO: list all values');
+                $.each(store.list(), function(key, value) {
+                                         if (key.match(/^\$/)) {
+                                             printLn(key.substr(1) + '=' + value);
+                                         }
+                                     });
+            } else {
+                if (setArgs[2] == '') {
+                    // list single value
+                    printLn(store.get(setArgs[1]));
+                } else {
+                    store.set('$' + setArgs[1], setArgs[2]);
+                }
+            }
+
+        } else if (action == 'unset' ||
+                   action == 'u') {
+            store.remove('$' + args);
+
         } else {
             // default to JavaScript
             result += doJavaScript(command);
         }
-        return result  ;
+        return result;
       }
 
     var commandTextArea = new CommandTextArea($('#cli-input'));
