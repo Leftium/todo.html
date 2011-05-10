@@ -44,14 +44,22 @@ store = (function() {
 
     return {
         get: function(name) {
-            // TODO: reload file if too much time has passed
-            return map[name];
+            if (name.match(/^(#|\$|\*)/)) {
+                // TODO: reload file if too much time has passed
+                return map[name];
+            } else {
+                return $.twFile.load(normalizedFilepath(name));
+            }
         },
 
         set: function(name, value) {
-            // TODO: delayed, less frequent saving
-            map[name] = value;
-            $.twFile.save(normalizedFilepath(), updatedHtml());
+            if (name.match(/^(#|\$|\*)/)) {
+                map[name] = value;
+                // TODO: delayed, less frequent saving
+                $.twFile.save(normalizedFilepath(), updatedHtml());
+            }  else {
+                $.twFile.save(normalizedFilepath(name), value.toString())
+            }
             return value;
         },
 
@@ -160,7 +168,7 @@ function CommandTextArea(jqObject)
     /// Public Members ///
 
     this.add = function(command) {
-       var tmpHistory = store.get('history');
+       var tmpHistory = store.get('*history');
 
        // Remove command from history
        tmpHistory = $.grep(tmpHistory, function (c) { return c != command; });
@@ -174,7 +182,7 @@ function CommandTextArea(jqObject)
 
        place = 0;
 
-       store.set('history', tmpHistory);
+       store.set('*history', tmpHistory);
     }
 
     this.clear = function() {
@@ -185,20 +193,20 @@ function CommandTextArea(jqObject)
         if (goingUp) {
             place = Math.max(place - 1, 0);
         } else {
-            place = Math.min(place + 1, store.get('history').length);
+            place = Math.min(place + 1, store.get('*history').length);
         }
-        jqObject.val(store.get('history')[place]);
+        jqObject.val(store.get('*history')[place]);
     }
 
     this.getHistory = function() {
         // Leave off last "blank" history item.
-        var fullHistory = store.get('history');
+        var fullHistory = store.get('*history');
         return fullHistory.slice(1, fullHistory.length);
     }
 
     // Ensure history exists in store
-    if (store.get('history') === undefined) {
-        store.set('history', [''])
+    if (store.get('*history') === undefined) {
+        store.set('*history', [''])
     }
 
     var place = 0;
