@@ -1,3 +1,7 @@
+body {
+    overflow: hidden;
+}
+
 #cli-box {
     position: fixed;
     top: 0;
@@ -20,11 +24,12 @@
 #cli-output-wrapper {
     top: 22px;
     bottom: 0px;
+    word-wrap: break-word;
 }
 
 #cli-output {
     overflow: auto;
-    padding: 5px;
+    padding: 0px 5px;
     height: 100%;
 
     font-family: Courier New, monospace;
