@@ -126,6 +126,9 @@ function CliOutput($jqObject)
 
     this.clear = function() {
         $jqObject.children(':not(#scroll-padding)').remove();
+        this.commandCount = 0;
+        this.addText('');
+        this.setMark();
     }
 
     this.setMark = function() {
@@ -157,9 +160,7 @@ function CliOutput($jqObject)
     }();
 
     this.$scrollPadding = $jqObject.children('#scroll-padding');
-    this.commandCount = 0;
-    this.setMark();
-
+    this.clear();
 }
 
 // Maintains command history.
