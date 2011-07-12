@@ -396,14 +396,64 @@ $(function() {
 
     $.twFile.initialize().then(function() {
         printLn('\nINITIALIZED! Using driver: ' + $.twFile.getDriver().name);
-        printLn('document.location.href: ' + document.location.href);
-        printLn('filepath: ' + normalizedFilepath());
+        printLn('Filepath: ' + normalizedFilepath() + '\n\n');
 
-        var contents = $.twFile.load(normalizedFilepath());
+        // process todo.cfg here
+        printLn('Processing: ' + normalizedFilepath('todo.cfg'));
 
-        printLn('length: ' + contents.length);
-        printLn('contents:\n'+ contents);
-        printLn('END contents');
+        var contents = $.twFile.load(normalizedFilepath('todo.cfg'));
+        printLn(processTodoCfg(contents).join('\n'));
     });
 });
+
+// This method roughly emulates how Bash would process todo.cfg: ignore
+// #comments and process export commands. I know it is not perfect, but
+// it should work satisfactorily for "well-formed" config files.
+
+function processTodoCfg(todoFileContents) {
+    var results = [];
+
+    function processTodoCfgLine(line)
+    {
+        // ignore #comments
+        line = line.replace(/#.*/, '');
+
+        var exportArgs = line.match(/export\s+(.*)=(.*)/);
+        if (exportArgs) {
+            var name = exportArgs[1];
+            var value = exportArgs[2];
+
+            // Emulate Bash `dirname "$0"`
+            // Get the current path sans filename
+            var path = $.twFile.convertUriToLocalPath(location.href);
+            path = path.match(/^(.*)[\\\/].*?$/)[1];
+
+            value = value.replace(/`\s*dirname\s+['"]\$0['"]\s*`/, path);
+
+            // Strip (single) quotes from beginning and end
+            value = value.match(/^["']*(.*?)["']*$/)[1];
+
+
+            // Substitute $environment_variables
+            var variables = value.match(/\$[a-zA-Z_][a-zA-Z0-9_]*/g);
+
+            if (variables) {
+                $.each(variables, function(i, varName) {
+                    var re = new RegExp('\\' + varName, 'g');
+                    value = value.replace(re, store.get(varName) || '');
+                });
+            }
+            store.set('$' + name, value);
+            results.push(name + ' = ' + value);
+        }
+    }
+
+    var lines = todoFileContents.split('\n');
+
+    $.each(lines, function(i, v) {
+        processTodoCfgLine(v);
+    });
+
+    return results;
+}
 
