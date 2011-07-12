@@ -15,11 +15,11 @@ function normalizedFilepath(filepath) {
         // Strip space, tab, backslash, slash from end.
         filepath = filepath.match(/^[ \t]*(.*?)[ \t\\\/]*$/)[1];
 
-        // Check if path ommitted; only filename given
-        if (filepath.search(/\\|\//) == -1)
+        // Check if absolute path
+        if (filepath.search(/^([a-z]:)?[\/\\]/i) == -1)
         {
-            // Prepend working directory if only filename given.
-            // Otherwise default twFile path is in an odd place.
+            // Prepend working directory to relative path/bare filename.
+            // (Otherwise default twFile path is in an odd place.)
 
             // Get the current file
             var path = $.twFile.convertUriToLocalPath(location.href);
