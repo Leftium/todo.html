@@ -314,7 +314,7 @@ $(function() {
             } else {
                 if (setArgs[2] == '') {
                     // list single value
-                    printLn(store.get(setArgs[1]));
+                    printLn(setArgs[1] + '=' + store.get('$' + setArgs[1]));
                 } else {
                     store.set('$' + setArgs[1], setArgs[2]);
                 }
