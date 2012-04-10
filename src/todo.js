@@ -5,27 +5,24 @@ function zip() {
     return Array.prototype.slice.call(arguments).join(' ');
 }
 
-// Write DOM to file
-function saveDomToFile(filepath)
-{
-    if (typeof(filepath) == 'undefined')
-    {
+function normalizedFilepath(filepath) {
+    if (filepath === undefined) {
         // Default to the file itself if no other filepath given
-        filepath = $.twFile.convertUriToLocalPath(location.toString());
+        filepath = $.twFile.convertUriToLocalPath(location.href);
     } else {
-        // Normalize filepath:
+
         // Strip space, tab, from beginning.
         // Strip space, tab, backslash, slash from end.
         filepath = filepath.match(/^[ \t]*(.*?)[ \t\\\/]*$/)[1];
 
-        // Check if path ommitted; only filename given
-        if (filepath.search(/\\|\//) == -1)
+        // Check if absolute path
+        if (filepath.search(/^([a-z]:)?[\/\\]/i) == -1)
         {
-            // Prepend working directory if only filename given.
-            // Otherwise default twFile path is in an odd place.
+            // Prepend working directory to relative path/bare filename.
+            // (Otherwise default twFile path is in an odd place.)
 
             // Get the current file
-            var path = $.twFile.convertUriToLocalPath(location.toString());
+            var path = $.twFile.convertUriToLocalPath(location.href);
 
             // Strip filename off
             path = path.match(/^(.*[\\\/]).*?$/)[1];
@@ -33,55 +30,80 @@ function saveDomToFile(filepath)
             filepath = path + filepath;
         }
     }
-
-    var localPath = $.twFile.convertUriToLocalPath(location.toString());
-    var original = $.twFile.load(localPath);
-    var posDiv = locateStoreArea(original);
-
-    if (posDiv) {
-        var revised = original.substr(0,posDiv[0] + startSaveArea.length) +
-                      "\n" + store.html() + "\n" + original.substr(posDiv[1]);
-        return $.twFile.save(filepath, revised);
-    } else {
-        return null;
-    }
+    return filepath;
 }
 
-// Map of key-value pairs
-// Stored in HTML DOM inside #store <div>
-function Store()
-{
+store = (function() {
+    // only load "static" variables once
     var $store = $('#store-area');
     var map = {};
 
     $store.find('pre').each(function() {
-        map[this.id] = $(this).text();
+        map[this.id] = TAFFY.JSON.parse($(this).text());
     });
 
-    this.get = function(key) {
-        return map[key];
-    }
+    return {
+        get: function(name) {
+            if (name.match(/^(#|\$|\*)/)) {
+                // TODO: reload file if too much time has passed
+                return map[name];
+            } else {
+                return $.twFile.load(normalizedFilepath(name));
+            }
+        },
 
-    this.getAll = function() {
-        return map;
-    }
+        set: function(name, value) {
+            if (name.match(/^(#|\$|\*)/)) {
+                map[name] = value;
+                // TODO: delayed, less frequent saving
+                $.twFile.save(normalizedFilepath(), updatedHtml());
+            }  else {
+                $.twFile.save(normalizedFilepath(name), value.toString())
+            }
+            return value;
+        },
 
-    this.set = function(key, value) {
-        map[key] = value;
+        list: function() {
+            return map;
+        },
 
-        $key = $store.find('#' + key);
+        remove: function(name) {
+            delete map[name];
+            $.twFile.save(normalizedFilepath(), updatedHtml());
+        },
 
-        if ($key.length == 0) {
-            $store.append('<pre id="' + key + '">' + value + '</pre>\n');
-        } else {
-            $key.text(value);
+        html: function() {
+              var $div = $('<div />');
+
+              $.each(map, function(key, value) {
+                  $('<pre />')
+                  .attr('id', key)
+                  .html(TAFFY.JSON.stringify(value))
+                  .appendTo($div);
+              });
+
+              return $.trim($div.html()
+                         .replace(/PRE/g, 'pre')
+                         .replace(/<\/pre><pre/g, '</pre>\n<pre')
+                     );
         }
-        saveDomToFile();
-        return value;
-    }
 
-    this.html = function() {
-        return $.trim($store.html()).replace(/<\/pre><pre/gi, '</pre>\n<pre');
+    };
+
+})();
+
+// Get html with updated #store-area from DOM
+updatedHtml = function() {
+    var localPath = normalizedFilepath();
+    var original = $.twFile.load(localPath);
+    var posDiv = locateStoreArea(original);
+
+    if (posDiv) {
+
+        return original.substr(0, posDiv[0] + startSaveArea.length) +
+               '\n' + store.html() + '\n' + original.substr(posDiv[1]);
+    } else {
+        return null;
     }
 }
 
@@ -104,6 +126,9 @@ function CliOutput($jqObject)
 
     this.clear = function() {
         $jqObject.children(':not(#scroll-padding)').remove();
+        this.commandCount = 0;
+        this.addText('');
+        this.setMark();
     }
 
     this.setMark = function() {
@@ -135,9 +160,7 @@ function CliOutput($jqObject)
     }();
 
     this.$scrollPadding = $jqObject.children('#scroll-padding');
-    this.commandCount = 0;
-    this.setMark();
-
+    this.clear();
 }
 
 // Maintains command history.
@@ -146,21 +169,21 @@ function CommandTextArea(jqObject)
     /// Public Members ///
 
     this.add = function(command) {
-       var tmpHistory = _getHistory();
+       var tmpHistory = store.get('*history');
 
        // Remove command from history
        tmpHistory = $.grep(tmpHistory, function (c) { return c != command; });
 
-       tmpHistory.splice(tmpHistory.length - 1, 0, command);
+       tmpHistory.splice(1, 0, command);
 
        // Limit history length
        if (tmpHistory.length > 100) {
            tmpHistory.splice(0, tmpHistory.length - 100 - 1);
        }
 
-       place = tmpHistory.length - 1;
+       place = 0;
 
-       _setHistory(tmpHistory);
+       store.set('*history', tmpHistory);
     }
 
     this.clear = function() {
@@ -171,28 +194,23 @@ function CommandTextArea(jqObject)
         if (goingUp) {
             place = Math.max(place - 1, 0);
         } else {
-            place = Math.min(place + 1, _getHistory().length - 1);
+            place = Math.min(place + 1, store.get('*history').length);
         }
-        jqObject.val(_getHistory()[place]);
+        jqObject.val(store.get('*history')[place]);
     }
 
     this.getHistory = function() {
         // Leave off last "blank" history item.
-        return _getHistory().slice(0, _getHistory().length - 1);
+        var fullHistory = store.get('*history');
+        return fullHistory.slice(1, fullHistory.length);
     }
 
-    /// Private Members ///
-    var _getHistory = function()
-    {
-        return store.get('history').split(/\r\n|\r|\n/);
+    // Ensure history exists in store
+    if (store.get('*history') === undefined) {
+        store.set('*history', [''])
     }
 
-    var _setHistory = function(newHistory)
-    {
-        return store.set('history', newHistory.join('\n'));
-    }
-
-    var place = _getHistory().length - 1;
+    var place = 0;
 }
 
 function getText(id)
@@ -225,8 +243,6 @@ function doJavaScript(jsString)
 // Run on document ready
 $(function() {
     var $ = jQuery; // local alias
-
-    window.store = new Store();
 
     var cliOutput = new CliOutput($('#cli-output'));
     cliOutput.addText(document.title + '\n\n' +
@@ -275,16 +291,52 @@ $(function() {
         } else if (action == 'set' ||
                    action == 's') {
             // TODO: fix: args is a string, not an array
-            if (args.length == 1) {
-                 asdf
-             } else if (args.length == 2) {
-                store.set(args[0], args[1]);
+            var setArgs = $.trim(args).match(/([^ \t]*)[ \t]*(.*)/);
+
+            /*
+            if (setArgs) {
+                printLn(setArgs.length.toString());
+                $.each(setArgs, function (i, v) {
+                    printLn('[' + v + ']');
+                });
+            } else {
+                printLn(args);
             }
+            */
+
+            if (setArgs[1] == '') {
+                // list all values
+                $.each(store.list(), function(key, value) {
+                                         if (key.match(/^\$/)) {
+                                             printLn(key.substr(1) + '=' + value);
+                                         }
+                                     });
+            } else {
+                if (setArgs[2] == '') {
+                    // list single value
+                    printLn(setArgs[1] + '=' + store.get('$' + setArgs[1]));
+                } else {
+                    store.set('$' + setArgs[1], setArgs[2]);
+                }
+            }
+
+        } else if (action == 'unset' ||
+                   action == 'u') {
+            store.remove('$' + args);
+
+        } else if (action == 'dir' ||
+                   action == 'd') {
+            $.each(store.list(), function(key, value) {
+                                     if (key.match(/^\#/)) {
+                                         printLn(key);
+                                     }
+                                 });
+
         } else {
             // default to JavaScript
             result += doJavaScript(command);
         }
-        return result  ;
+        return result;
       }
 
     var commandTextArea = new CommandTextArea($('#cli-input'));
@@ -343,20 +395,75 @@ $(function() {
     });
 
     $.twFile.initialize().then(function() {
-        var filepath = document.location.href;               // Get the current file
+        var driverList = $.twFile.availableDrivers();
+        printLn('\nINITIALIZED! ' + driverList.length +
+                ' drivers available: [' + driverList + ']');
+        printLn('\nFilepath: ' + normalizedFilepath() + '\n\n');
 
-        filepath = $.twFile.convertUriToLocalPath(filepath); // Convert the path to a readable format
-        // filepath = filepath.replace(/html$/,'txt');
+        printLn('load self: ' + ((!!$.twFile.load(normalizedFilepath())) ? $.twFile.lastDriver.name : 'FAIL'));
+        printLn('load external: ' + ((!!$.twFile.load(normalizedFilepath('todo.css'))) ? $.twFile.lastDriver.name : 'FAIL'));
 
-        printLn('\nINITIALIZED! Using driver: ' + $.twFile.getDriver().name);
-        printLn('document.location.href: ' + document.location.href);
-        printLn('filepath: ' + filepath);
+        // process todo.cfg here
+        var todoCfgPath = store.get('$HOME') +'/.todo/todo.cfg';
+        todoCfgPath = normalizedFilepath(todoCfgPath);
+        printLn('Processing: ' + todoCfgPath);
 
-        var contents = $.twFile.load(filepath);
-
-        printLn('length: ' + contents.length);
-        printLn('contents:\n'+ contents);
-        printLn('END contents');
+        var contents = $.twFile.load(todoCfgPath);
+        if (contents) {
+            printLn('\nUsing driver: ' + $.twFile.lastDriver.name);
+            printLn(processTodoCfg(contents).join('\n'));
+        }
     });
 });
+
+// This method roughly emulates how Bash would process todo.cfg: ignore
+// #comments and process export commands. I know it is not perfect, but
+// it should work satisfactorily for "well-formed" config files.
+
+function processTodoCfg(todoFileContents) {
+    var results = [];
+
+    function processTodoCfgLine(line)
+    {
+        // ignore #comments
+        line = line.replace(/#.*/, '');
+
+        var exportArgs = line.match(/export\s+(.*)=(.*)/);
+        if (exportArgs) {
+            var name = exportArgs[1];
+            var value = exportArgs[2];
+
+            // Emulate Bash `dirname "$0"`
+            // Get the current path sans filename
+            var path = $.twFile.convertUriToLocalPath(location.href);
+            path = path.match(/^(.*)[\\\/].*?$/)[1];
+
+            value = value.replace(/`\s*dirname\s+['"]\$0['"]\s*`/, path);
+
+            // Strip (single) quotes from beginning and end
+            value = value.match(/^["']*(.*?)["']*$/)[1];
+
+
+            // Substitute $environment_variables
+            var variables = value.match(/\$[a-zA-Z_][a-zA-Z0-9_]*/g);
+
+            if (variables) {
+                $.each(variables, function(i, varName) {
+                    var re = new RegExp('\\' + varName, 'g');
+                    value = value.replace(re, store.get(varName) || '');
+                });
+            }
+            store.set('$' + name, value);
+            results.push(name + ' = ' + value);
+        }
+    }
+
+    var lines = todoFileContents.split('\n');
+
+    $.each(lines, function(i, v) {
+        processTodoCfgLine(v);
+    });
+
+    return results;
+}
 
