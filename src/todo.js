@@ -395,14 +395,24 @@ $(function() {
     });
 
     $.twFile.initialize().then(function() {
-        printLn('\nINITIALIZED! Using driver: ' + $.twFile.getDriver().name);
-        printLn('Filepath: ' + normalizedFilepath() + '\n\n');
+        var driverList = $.twFile.availableDrivers();
+        printLn('\nINITIALIZED! ' + driverList.length +
+                ' drivers available: [' + driverList + ']');
+        printLn('\nFilepath: ' + normalizedFilepath() + '\n\n');
+
+        printLn('load self: ' + ((!!$.twFile.load(normalizedFilepath())) ? $.twFile.lastDriver.name : 'FAIL'));
+        printLn('load external: ' + ((!!$.twFile.load(normalizedFilepath('todo.css'))) ? $.twFile.lastDriver.name : 'FAIL'));
 
         // process todo.cfg here
-        printLn('Processing: ' + normalizedFilepath('todo.cfg'));
+        var todoCfgPath = store.get('$HOME') +'/.todo/todo.cfg';
+        todoCfgPath = normalizedFilepath(todoCfgPath);
+        printLn('Processing: ' + todoCfgPath);
 
-        var contents = $.twFile.load(normalizedFilepath('todo.cfg'));
-        printLn(processTodoCfg(contents).join('\n'));
+        var contents = $.twFile.load(todoCfgPath);
+        if (contents) {
+            printLn('\nUsing driver: ' + $.twFile.lastDriver.name);
+            printLn(processTodoCfg(contents).join('\n'));
+        }
     });
 });
 
