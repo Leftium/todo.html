@@ -44,6 +44,8 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
             var response = fs.readSync(process.stdin.fd, 1024, 0, 'utf8');
             process.stdin.pause();
 
+            // TODO: add multi-line support
+
             return response[0].trim();
         },
     }
@@ -67,15 +69,29 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
                 return false;
             }
             return true;
+        },
+
+        append: function(filePath, appendContent) {
+            var content = this.load(filePath);
+            if(typeof(content) == 'string') {
+                content += appendContent + '\n';
+                if (this.save(filePath, content)) {
+                    return content;
+                }
+            }
+            return '';
         }
     }
 
-    var todo = new Todo(process.env, filesystem, ui);
+    var env = {};
+    for (e in process.env) env[e] = process.env[e];
+
+    var todo = new Todo(env, filesystem, ui);
     var exitCode = todo(argv);
     process.exit(exitCode);
 END_OF_JS
 
 node -e "$JS_WRAPPER" PREVENT_NODE_FROM_EATING_OPTIONS $@
 
-echo $TODO_SH exited with: $?
+echo [$TODO_SH exited with: $?]
 exit $?

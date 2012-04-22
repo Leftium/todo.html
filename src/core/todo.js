@@ -1,4 +1,4 @@
-    Todo = function(env, filesystem, ui) {
+            Todo = function(env, filesystem, ui) {
 
 var version = function() {
     ui.echo(
@@ -257,8 +257,12 @@ var help = function()
         '    shorthelp\n' +
         '      List the one-line usage of all built-in and add-on actions.');
 
-        // TODO: addonHelp();
+        addonHelp();
     exit(1);
+}
+
+var addonHelp = function() {
+    return 0;
 }
 
 var die = function(msg) {
@@ -266,115 +270,206 @@ var die = function(msg) {
     exit(1);
 }
 
+var cleaninput = function(input, forSed)
+{
+    // Parameters:    When $1 = "for sed", performs additional escaping for use
+    //                in sed substitution with "|" separators.
+    // Precondition:  $input contains text to be cleaned.
+    // Postcondition: Modifies $input.
+
+    // Replace CR and LF with space; tasks always comprise a single line.
+    input = input.replace(/\r/, ' ');
+    input = input.replace(/\n/, ' ');
+
+    if (forSed) {
+        // This action uses sed with "|" as the substitution separator, and & as
+        // the matched string; these must be escaped.
+        // Backslashes must be escaped, too, and before the other stuff.
+        input = input.replace(/\/\//, '\/\/\/\/');
+        input = input.replace(/|/, '\\|/');
+        input = input.replace(/&/, '\\&');
+    }
+    return input;
+}
+
+var getPrefix = function(todo_file)
+{
+    // Parameters:    $1: todo file; empty means $TODO_FILE.
+    // Returns:       Uppercase FILE prefix to be used in place of "TODO:" where
+    //                a different todo file can be specified.
+
+    todo_file = todo_file || env.TODO_FILE;
+    todo_file = todo_file.replace(/^.*\/|\.[^.]*$/g, '');
+    return todo_file.toUpperCase();
+}
+
+// This method roughly emulates how Bash would process todo.cfg: ignore
+// #comments and process export commands. I know it is not perfect, but
+// it should work satisfactorily for "well-formed" config files.
+
+var processConfig = function(todoFileContents) {
+
+    function processTodoCfgLine(line) {
+        // ignore #comments
+        line = line.replace(/#.*/, '');
+
+        var exportArgs = line.match(/export\s+(.*)=(.*)/);
+        if (exportArgs) {
+            var name = exportArgs[1];
+            var value = exportArgs[2];
+
+            // Emulate Bash `dirname "$0"`
+            // Get the current path sans filename
+            var path = env.PWD;
+            path = path.match(/^(.*)[\\\/].*?$/)[1];
+
+            value = value.replace(/`\s*dirname\s+['"]\$0['"]\s*`/, path);
+
+            // Strip (single) quotes from beginning and end
+            value = value.match(/^["']*(.*?)["']*$/)[1];
+
+
+            // Substitute $environment_variables
+            var variables = value.match(/\$[a-zA-Z_][a-zA-Z0-9_]*/g);
+
+            if (variables) {
+                for(var i = 0; i < variables.length; i++) {
+                    var re = new RegExp('\\' + variables[i], 'g');
+                    value = value.replace(re, env[variables[i].slice(1)] || 'WOW');
+                }
+            }
+            env[name] = value;
+            // console.log(name +' = ' + value);
+        }
+    }
+
+    var lines = todoFileContents.split('\n');
+
+    for(var i=0; i < lines.length; i++) {
+        processTodoCfgLine(lines[i]);
+    }
+}
+
 return function(argv) {
+    // Preserving environment variables so they don't get clobbered by the config file
+    env.OVR_TODOTXT_AUTO_ARCHIVE = env.TODOTXT_AUTO_ARCHIVE;
+    env.OVR_TODOTXT_FORCE = env.TODOTXT_FORCE;
+    env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS = env.TODOTXT_PRESERVE_LINE_NUMBERS;
+    env.OVR_TODOTXT_PLAIN = env.TODOTXT_PLAIN;
+    env.OVR_TODOTXT_DATE_ON_ADD = env.TODOTXT_DATE_ON_ADD;
+    env.OVR_TODOTXT_DISABLE_FILTER = env.TODOTXT_DISABLE_FILTER;
+    env.OVR_TODOTXT_VERBOSE = env.TODOTXT_VERBOSE;
+    env.OVR_TODOTXT_DEFAULT_ACTION = env.TODOTXT_DEFAULT_ACTION;
+    env.OVR_TODOTXT_SORT_COMMAND = env.TODOTXT_SORT_COMMAND;
+    env.OVR_TODOTXT_FINAL_FILTER = env.TODOTXT_FINAL_FILTER;
 
     // == PROCESS OPTIONS ==
     var option;
     while ((option = getopt(argv, ':fhpcnNaAtTvVx+@Pd:')) != '') {
         switch (option) {
-           case '@':
-               // HIDE_CONTEXT_NAMES starts at zero (false); increment it to one
-               //   (true) the first time this flag is seen. Each time the flag
-               //   is seen after that, increment it again so that an even
-               //   number shows context names and an odd number hides context
-               //   names.
-               env.HIDE_CONTEXT_NAMES = env.HIDE_CONTEXT_NAMES || 0;
-               env.HIDE_CONTEXT_NAMES++;
-               if ((env.HIDE_CONTEXT_NAMES % 2) == 0) {
-                   // Zero or even value -- show context names
-                   env.HIDE_CONTEXTS_SUBSTITUTION = '';
-               } else {
-                   env.HIDE_CONTEXTS_SUBSTITUTION = '\\s@[\\x21-\\x7E]\{1,\}';
-               }
-               break;
-           case '+':
-               // HIDE_PROJECT_NAMES starts at zero (false); increment it to one
-               //   (true) the first time this flag is seen. Each time the flag
-               //   is seen after that, increment it again so that an even
-               //   number shows project names and an odd number hides project
-               //   names.
-               env.HIDE_PROJECT_NAMES = env.HIDE_PROJECT_NAMES || 0;
-               env.HIDE_PROJECT_NAMES++;
-               if ((env.HIDE_PROJECT_NAMES % 2) == 0) {
-                   // Zero or even value -- show context names
-                   env.HIDE_PROJECTS_SUBSTITUTION = '';
-               } else {
-                   env.HIDE_PROJECTS_SUBSTITUTION = '\\s[+][\\x21-\\x7E]\{1,\}';
-               }
-               break;
-           case 'a':
-               env.OVR_TODOTXT_AUTO_ARCHIVE = 0;
-               break;
-           case 'A':
-               env.OVR_TODOTXT_AUTO_ARCHIVE = 1;
-               break;
-           case 'c':
-               env.OVR_TODOTXT_PLAIN = 0;
-               break;
-           case 'd':
-               env.TODOTXT_CFG_FILE = optarg;
-               break;
-           case 'f':
-               env.OVR_TODOTXT_FORCE = 1;
-               break;
-           case 'h':
-               // Short-circuit option parsing and forward to the action.
-               // Cannot just invoke shorthelp() because we need the configuration
-               // processed to locate the add-on actions directory.
-               argv = ['--', 'shorthelp'];
-               optreset = true;
-               break;
-           case 'n':
-               env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS = 0;
-               break;
-           case 'N':
-               env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS = 1;
-               break;
-           case 'p':
-               env.OVR_TODOTXT_PLAIN = 1;
-               break;
-           case 'P':
-               // HIDE_PRIORITY_LABELS starts at zero (false); increment it to one
-               //   (true) the first time this flag is seen. Each time the flag
-               //   is seen after that, increment it again so that an even
-               //   number shows priority labels and an odd number hides priority
-               //   labels.
-               env.HIDE_PRIORITY_LABELS = env.HIDE_PRIORITY_LABELS || 0;
-               env.HIDE_PRIORITY_LABELS++;
-               if ((env.HIDE_PRIORITY_LABELS % 2) == 0) {
-                   // Zero or even value -- show context names
-                   env.HIDE_PRIORITY_SUBSTITUTION = '';
-               } else {
-                   env.HIDE_PRIORITY_SUBSTITUTION = '([A-Z])\s';
-               }
-               break;
-           case 't':
-               env.OVR_TODOTXT_DATE_ON_ADD = 1;
-               break;
-           case 'T':
-               env.OVR_TODOTXT_DATE_ON_ADD = 0;
-               break;
-           case 'v':
-               env.TODOTXT_VERBOSE = env.TODOTXT_VERBOSE || 0;
-               env.TODOTXT_VERBOSE++;
-               break;
-           case 'V':
-               version();
-               break;
-           case 'x':
-               env.OVR_TODOTXT_DISABLE_FILTER = 1;
-               break;
+            case '@':
+                // HIDE_CONTEXT_NAMES starts at zero (false); increment it to one
+                //   (true) the first time this flag is seen. Each time the flag
+                //   is seen after that, increment it again so that an even
+                //   number shows context names and an odd number hides context
+                //   names.
+                env.HIDE_CONTEXT_NAMES = env.HIDE_CONTEXT_NAMES || 0;
+                env.HIDE_CONTEXT_NAMES++;
+                if ((env.HIDE_CONTEXT_NAMES % 2) == 0) {
+                    // Zero or even value -- show context names
+                    env.HIDE_CONTEXTS_SUBSTITUTION = '';
+                } else {
+                    env.HIDE_CONTEXTS_SUBSTITUTION = '\\s@[\\x21-\\x7E]\{1,\}';
+                }
+                break;
+            case '+':
+                // HIDE_PROJECT_NAMES starts at zero (false); increment it to one
+                //   (true) the first time this flag is seen. Each time the flag
+                //   is seen after that, increment it again so that an even
+                //   number shows project names and an odd number hides project
+                //   names.
+                env.HIDE_PROJECT_NAMES = env.HIDE_PROJECT_NAMES || 0;
+                env.HIDE_PROJECT_NAMES++;
+                if ((env.HIDE_PROJECT_NAMES % 2) == 0) {
+                    // Zero or even value -- show context names
+                    env.HIDE_PROJECTS_SUBSTITUTION = '';
+                } else {
+                    env.HIDE_PROJECTS_SUBSTITUTION = '\\s[+][\\x21-\\x7E]\{1,\}';
+                }
+                break;
+            case 'a':
+                env.OVR_TODOTXT_AUTO_ARCHIVE = 0;
+                break;
+            case 'A':
+                env.OVR_TODOTXT_AUTO_ARCHIVE = 1;
+                break;
+            case 'c':
+                env.OVR_TODOTXT_PLAIN = 0;
+                break;
+            case 'd':
+                env.TODOTXT_CFG_FILE = optarg;
+                break;
+            case 'f':
+                env.OVR_TODOTXT_FORCE = 1;
+                break;
+            case 'h':
+                // Short-circuit option parsing and forward to the action.
+                // Cannot just invoke shorthelp() because we need the configuration
+                // processed to locate the add-on actions directory.
+                argv = ['--', 'shorthelp'];
+                optreset = true;
+                break;
+            case 'n':
+                env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS = 0;
+                break;
+            case 'N':
+                env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS = 1;
+                break;
+            case 'p':
+                env.OVR_TODOTXT_PLAIN = 1;
+                break;
+            case 'P':
+                // HIDE_PRIORITY_LABELS starts at zero (false); increment it to one
+                //   (true) the first time this flag is seen. Each time the flag
+                //   is seen after that, increment it again so that an even
+                //   number shows priority labels and an odd number hides priority
+                //   labels.
+                env.HIDE_PRIORITY_LABELS = env.HIDE_PRIORITY_LABELS || 0;
+                env.HIDE_PRIORITY_LABELS++;
+                if ((env.HIDE_PRIORITY_LABELS % 2) == 0) {
+                    // Zero or even value -- show context names
+                    env.HIDE_PRIORITY_SUBSTITUTION = '';
+                } else {
+                    env.HIDE_PRIORITY_SUBSTITUTION = '([A-Z])\s';
+                }
+                break;
+            case 't':
+                env.OVR_TODOTXT_DATE_ON_ADD = 1;
+                break;
+            case 'T':
+                env.OVR_TODOTXT_DATE_ON_ADD = 0;
+                break;
+            case 'v':
+                env.OVR_TODOTXT_VERBOSE = env.OVR_TODOTXT_VERBOSE || 0;
+                env.OVR_TODOTXT_VERBOSE++;
+                break;
+            case 'V':
+                version();
+                break;
+            case 'x':
+                env.OVR_TODOTXT_DISABLE_FILTER = 1;
+                break;
 
-           case ':':
-               ui.echo('Error - Option needs a value: ' + optopt);
-               return 1;
-           case '?':
-               ui.echo('Error - No such option: ' + optopt);
-               return 1;
-           default:
-               ui.echo('Error - Option implemented yet: ' + optopt);
-               return 1;
-         }
+            case ':':
+                ui.echo('Error - Option needs a value: ' + optopt);
+                return 1;
+            case '?':
+                ui.echo('Error - No such option: ' + optopt);
+                return 1;
+            default:
+                ui.echo('Error - Option implemented yet: ' + optopt);
+                return 1;
+        }
     }
 
     // defaults if not yet defined
@@ -436,40 +531,41 @@ return function(argv) {
         config = filesystem.load(env.PWD + '/todo.cfg');
     }
 
+    // === SANITY CHECKS (thanks Karl!) ===
     if (!config) { die('Fatal Error: Cannot read configuration file ' + env.PWD + '/todo.cfg'); }
 
-    // TODO: apply config file.
+    processConfig(config);
 
     // === APPLY OVERRIDES
     if (env.OVR_TODOTXT_AUTO_ARCHIVE) {
-      TODOTXT_AUTO_ARCHIVE = env.OVR_TODOTXT_AUTO_ARCHIVE;
+        env.TODOTXT_AUTO_ARCHIVE = env.OVR_TODOTXT_AUTO_ARCHIVE;
     }
     if (env.OVR_TODOTXT_FORCE) {
-      TODOTXT_FORCE = env.OVR_TODOTXT_FORCE;
+        env.TODOTXT_FORCE = env.OVR_TODOTXT_FORCE;
     }
     if (env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS) {
-      TODOTXT_PRESERVE_LINE_NUMBERS = env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS;
+        env.TODOTXT_PRESERVE_LINE_NUMBERS = env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS;
     }
     if (env.OVR_TODOTXT_PLAIN) {
-      TODOTXT_PLAIN = env.OVR_TODOTXT_PLAIN;
+        env.TODOTXT_PLAIN = env.OVR_TODOTXT_PLAIN;
     }
-    if (env.OVR_TODOTXT_DATE_ON_ADD) {
-      TODOTXT_DATE_ON_ADD = env.OVR_TODOTXT_DATE_ON_ADD;
+    if (env.OVR_TODOTXT_DATE_ON_ADD !== undefined) {
+        env.TODOTXT_DATE_ON_ADD = env.OVR_TODOTXT_DATE_ON_ADD;
     }
     if (env.OVR_TODOTXT_DISABLE_FILTER) {
-      TODOTXT_DISABLE_FILTER = env.OVR_TODOTXT_DISABLE_FILTER;
+        env.TODOTXT_DISABLE_FILTER = env.OVR_TODOTXT_DISABLE_FILTER;
     }
     if (env.OVR_TODOTXT_VERBOSE) {
-      TODOTXT_VERBOSE = env.OVR_TODOTXT_VERBOSE;
+        env.TODOTXT_VERBOSE = env.OVR_TODOTXT_VERBOSE;
     }
     if (env.OVR_TODOTXT_DEFAULT_ACTION) {
-      TODOTXT_DEFAULT_ACTION = env.OVR_TODOTXT_DEFAULT_ACTION;
+        env.TODOTXT_DEFAULT_ACTION = env.OVR_TODOTXT_DEFAULT_ACTION;
     }
     if (env.OVR_TODOTXT_SORT_COMMAND) {
-      TODOTXT_SORT_COMMAND = env.OVR_TODOTXT_SORT_COMMAND;
+        env.TODOTXT_SORT_COMMAND = env.OVR_TODOTXT_SORT_COMMAND;
     }
     if (env.OVR_TODOTXT_FINAL_FILTER) {
-      TODOTXT_FINAL_FILTER = env.OVR_TODOTXT_FINAL_FILTER;
+        env.TODOTXT_FINAL_FILTER = env.OVR_TODOTXT_FINAL_FILTER;
     }
 
     for (var i = 0; i < optind; i++) {
@@ -477,7 +573,7 @@ return function(argv) {
     }
     var action = argv[0] || env.TODOTXT_DEFAULT_ACTION;
 
-    ui.echo('action: ' + action);
+    // console.log('action: ' + action);
 
     if (!action) { usage() };
 
@@ -492,9 +588,41 @@ return function(argv) {
         env.COLOR_DONE = env.NONE;
     }
 
+    var formattedDate = function() {
+        var date = new Date();
+
+        var result = date.getFullYear() + '-';
+        if (date.getMonth() < 9) {
+            result += '0';
+        }
+        result += date.getMonth() + 1 + '-';
+        result += date.getDate() + ' ';
+        return  result;
+    }
+
+    var _addto = function(file, input) {
+
+        input = cleaninput(input);
+        if(env.TODOTXT_DATE_ON_ADD) {
+            var now = formattedDate();
+            input = input.replace(/^(\([A-Z]\) ){0,1}/, '$1' + now);
+        }
+        var result = filesystem.append(file, input);
+        // console.log('env.TODOTXT_VERBOSE: ' + env.TODOTXT_VERBOSE);
+        if(env.TODOTXT_VERBOSE > 0) {
+            var tasknum = result.split('\n').length - 1;
+            ui.echo(tasknum + ' ' + input);
+            ui.echo(getPrefix(file) + ': ' + tasknum + ' added.');
+        }
+    }
+
     // == HANDLE ACTION ==
     action = (action && action.toLowerCase());
 
+    // If the first argument is "command", run the rest of the arguments
+    // using todo.sh builtins.
+    // Else, run a actions script with the name of the command if it exists
+    // or fallback to using a builtin
     if (action == 'command') {
         // Get rid of "command" from arguments list
         argv.shift();
@@ -508,6 +636,30 @@ return function(argv) {
 
     // Only run if action isn't found in .todo.actions.d
     switch (action) {
+        case 'add': case 'a':
+            if(!argv[1] && env.TODOTXT_FORCE == 0) {
+                input = ui.ask('Add: ');
+            } else {
+                if(!argv[1]) { die('usage: ' + env.TODO_SH + ' add "TODO ITEM"'); }
+                input = argv.splice(1).join(' ');
+            }
+            // console.log(env.TODO_FILE);
+            _addto(env.TODO_FILE, input);
+            break;
+       case 'addto':
+            if(!argv[1]) { die('usage: ' + env.TODO_SH + ' addto DEST "TODO ITEM"'); }
+            var dest = env.TODO_DIR + '/' +  argv[1];
+            if(!argv[2]) { die('usage: ' + env.TODO_SH + ' addto DEST "TODO ITEM"'); }
+            var input = argv.splice(2).join(' ');
+
+            var contents = filesystem.load(dest);
+            if (typeof contents === 'string') {
+                _addto(dest, input);
+            } else {
+                die('TODO: Destination file ' + dest + ' does not exist.');
+            }
+            break;
+
         case 'help':
             help();
             break;
@@ -521,4 +673,4 @@ return function(argv) {
     return 0;
 }
 
-    }; // Todo = function()
+            }; // Todo = function()
