@@ -850,7 +850,7 @@ fi
 
         var filters = filtercommand('', '', terms);
 
-        var filtered_items = [];
+        var filteredItems = [];
 
         if (filters.length) {
             for(var i=0; i < nonemptyItems.length; i++) {
@@ -863,20 +863,20 @@ fi
                     }
                 }
                 if (eligible) {
-                    filtered_items.push(item);
+                    filteredItems.push(item);
                 }
             }
         } else {
-            filtered_items = nonemptyItems;
+            filteredItems = nonemptyItems;
         }
 
-        filtered_items = filtered_items.sort(function(a, b) {
+        filteredItems = filteredItems.sort(function(a, b) {
             return ((a.substr(padding + 1)).toLowerCase() <
                     (b.substr(padding + 1)).toLowerCase() ? -1 : 1);
         });
 
-        for(var i = 0; i < filtered_items.length; i++) {
-            var item = filtered_items[i];
+        for(var i = 0; i < filteredItems.length; i++) {
+            var item = filteredItems[i];
             if (item.match(/^x/)) {   /// TODO: FIX REGEX
                 item = highlight('COLOR_DONE') + item + highlight('DEFAULT');
             }
@@ -884,25 +884,25 @@ fi
             if (match) {
                 item = highlight('PRI_' + match[1]) + item + highlight('DEFAULT');
             }
-            filtered_items[i] = item;
+            filteredItems[i] = item;
         }
 
-        for(var i = 0; i < filtered_items.length; i++) {
-            item = filtered_items[i];
+        for(var i = 0; i < filteredItems.length; i++) {
+            item = filteredItems[i];
 
             item = item.replace(new RegExp(env.HIDE_PROJECTS_SUBSTITUTION), '');
             item = item.replace(new RegExp(env.HIDE_CONTEXTS_SUBSTITUTION), '');
             item = item.replace(new RegExp(env.HIDE_PRIORITY_SUBSTITUTION), '');
 
-            filtered_items[i] = item;
+            filteredItems[i] = item;
         }
 
 
-        for(var i = 0; i < filtered_items.length; i++) {
-            ui.echo(filtered_items[i]);
+        for(var i = 0; i < filteredItems.length; i++) {
+            ui.echo(filteredItems[i]);
         }
         if (env.TODOTXT_VERBOSE > 0) {
-            env.numTasks = filtered_items.length;
+            env.numTasks = filteredItems.length;
             env.totalTasks = nonemptyItems.length;
         }
         if (env.TODOTXT_VERBOSE > 1) {
