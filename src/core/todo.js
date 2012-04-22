@@ -257,13 +257,34 @@ var help = function()
         '    shorthelp\n' +
         '      List the one-line usage of all built-in and add-on actions.');
 
-        addonHelp();
+
     exit(1);
 }
-
-var addonHelp = function() {
-    return 0;
+/*
+ * Cannot list directories from JavaScript.
+ * Also cannot run external Bash scripts.
+ *
+addonHelp()
+{
+    if [ -d "$TODO_ACTIONS_DIR" ]; then
+        didPrintAddonActionsHeader=
+        for action in "$TODO_ACTIONS_DIR"/*
+        do
+            if [ -f "$action" -a -x "$action" ]; then
+                if [ ! "$didPrintAddonActionsHeader" ]; then
+                    cat <<-EndAddonActionsHeader
+          Add-on Actions:
+    EndAddonActionsHeader
+                    didPrintAddonActionsHeader=1
+                fi
+                "$action" usage
+            fi
+        done
+    fi
 }
+ *
+ *
+ */
 
 var die = function(msg) {
     ui.echo(msg);
@@ -272,10 +293,16 @@ var die = function(msg) {
 
 var cleaninput = function(input, forSed)
 {
-    // Parameters:    When $1 = "for sed", performs additional escaping for use
-    //                in sed substitution with "|" separators.
-    // Precondition:  $input contains text to be cleaned.
-    // Postcondition: Modifies $input.
+/*
+ *
+ *
+    # Parameters:    When $1 = "for sed", performs additional escaping for use
+    #                in sed substitution with "|" separators.
+    # Precondition:  $input contains text to be cleaned.
+    # Postcondition: Modifies $input.
+ *
+ *
+ */
 
     // Replace CR and LF with space; tasks always comprise a single line.
     input = input.replace(/\r/, ' ');
@@ -294,9 +321,15 @@ var cleaninput = function(input, forSed)
 
 var getPrefix = function(todo_file)
 {
-    // Parameters:    $1: todo file; empty means $TODO_FILE.
-    // Returns:       Uppercase FILE prefix to be used in place of "TODO:" where
-    //                a different todo file can be specified.
+/*
+ *
+ *
+    # Parameters:    $1: todo file; empty means $TODO_FILE.
+    # Returns:       Uppercase FILE prefix to be used in place of "TODO:" where
+    #                a different todo file can be specified.
+ *
+ *
+ */
 
     todo_file = todo_file || env.TODO_FILE;
     todo_file = todo_file.replace(/^.*\/|\.[^.]*$/g, '');
@@ -368,33 +401,45 @@ return function(argv) {
     while ((option = getopt(argv, ':fhpcnNaAtTvVx+@Pd:')) != '') {
         switch (option) {
             case '@':
-                // HIDE_CONTEXT_NAMES starts at zero (false); increment it to one
-                //   (true) the first time this flag is seen. Each time the flag
-                //   is seen after that, increment it again so that an even
-                //   number shows context names and an odd number hides context
-                //   names.
+/*
+ *
+ *
+        ## HIDE_CONTEXT_NAMES starts at zero (false); increment it to one
+        ##   (true) the first time this flag is seen. Each time the flag
+        ##   is seen after that, increment it again so that an even
+        ##   number shows context names and an odd number hides context
+        ##   names.
+ *
+ *
+ */
                 env.HIDE_CONTEXT_NAMES = env.HIDE_CONTEXT_NAMES || 0;
                 env.HIDE_CONTEXT_NAMES++;
                 if ((env.HIDE_CONTEXT_NAMES % 2) == 0) {
                     // Zero or even value -- show context names
-                    env.HIDE_CONTEXTS_SUBSTITUTION = '';
+                    env.HIDE_CONTEXTS_SUBSTITUTION = /^/;
                 } else {
-                    env.HIDE_CONTEXTS_SUBSTITUTION = '\\s@[\\x21-\\x7E]\{1,\}';
+                    env.HIDE_CONTEXTS_SUBSTITUTION = /\s@[\x21-\x7E]{1,}/;
                 }
                 break;
             case '+':
-                // HIDE_PROJECT_NAMES starts at zero (false); increment it to one
-                //   (true) the first time this flag is seen. Each time the flag
-                //   is seen after that, increment it again so that an even
-                //   number shows project names and an odd number hides project
-                //   names.
+/*
+ *
+ *
+        ## HIDE_PROJECT_NAMES starts at zero (false); increment it to one
+        ##   (true) the first time this flag is seen. Each time the flag
+        ##   is seen after that, increment it again so that an even
+        ##   number shows project names and an odd number hides project
+        ##   names.
+ *
+ *
+ */
                 env.HIDE_PROJECT_NAMES = env.HIDE_PROJECT_NAMES || 0;
                 env.HIDE_PROJECT_NAMES++;
                 if ((env.HIDE_PROJECT_NAMES % 2) == 0) {
                     // Zero or even value -- show context names
-                    env.HIDE_PROJECTS_SUBSTITUTION = '';
+                    env.HIDE_PROJECTS_SUBSTITUTION = /^/;
                 } else {
-                    env.HIDE_PROJECTS_SUBSTITUTION = '\\s[+][\\x21-\\x7E]\{1,\}';
+                    env.HIDE_PROJECTS_SUBSTITUTION = /\s[+][\x21-\x7E]{1,}/;
                 }
                 break;
             case 'a':
@@ -413,9 +458,15 @@ return function(argv) {
                 env.OVR_TODOTXT_FORCE = 1;
                 break;
             case 'h':
-                // Short-circuit option parsing and forward to the action.
-                // Cannot just invoke shorthelp() because we need the configuration
-                // processed to locate the add-on actions directory.
+ /*
+  *
+  *
+        # Short-circuit option parsing and forward to the action.
+        # Cannot just invoke shorthelp() because we need the configuration
+        # processed to locate the add-on actions directory.
+  *
+  *
+  */
                 argv = ['--', 'shorthelp'];
                 optreset = true;
                 break;
@@ -429,18 +480,24 @@ return function(argv) {
                 env.OVR_TODOTXT_PLAIN = 1;
                 break;
             case 'P':
-                // HIDE_PRIORITY_LABELS starts at zero (false); increment it to one
-                //   (true) the first time this flag is seen. Each time the flag
-                //   is seen after that, increment it again so that an even
-                //   number shows priority labels and an odd number hides priority
-                //   labels.
+/*
+ *
+ *
+        ## HIDE_PRIORITY_LABELS starts at zero (false); increment it to one
+        ##   (true) the first time this flag is seen. Each time the flag
+        ##   is seen after that, increment it again so that an even
+        ##   number shows priority labels and an odd number hides priority
+        ##   labels.
+ *
+ *
+ */
                 env.HIDE_PRIORITY_LABELS = env.HIDE_PRIORITY_LABELS || 0;
                 env.HIDE_PRIORITY_LABELS++;
                 if ((env.HIDE_PRIORITY_LABELS % 2) == 0) {
                     // Zero or even value -- show context names
-                    env.HIDE_PRIORITY_SUBSTITUTION = '';
+                    env.HIDE_PRIORITY_SUBSTITUTION = /^/;
                 } else {
-                    env.HIDE_PRIORITY_SUBSTITUTION = '([A-Z])\s';
+                    env.HIDE_PRIORITY_SUBSTITUTION = /\([A-Z]\)\s/;
                 }
                 break;
             case 't':
@@ -531,6 +588,26 @@ return function(argv) {
         config = filesystem.load(env.PWD + '/todo.cfg');
     }
 
+/*
+ * Only builtin actions supported; no TODO_ACTIONS_DIR.
+ *
+if [ -z "$TODO_ACTIONS_DIR" -o ! -d "$TODO_ACTIONS_DIR" ]
+then
+    TODO_ACTIONS_DIR="$HOME/.todo/actions"
+    export TODO_ACTIONS_DIR
+fi
+
+[ -d "$TODO_ACTIONS_DIR" ] || {
+    TODO_ACTIONS_DIR_ALT="$HOME/.todo.actions.d"
+
+    if [ -d "$TODO_ACTIONS_DIR_ALT" ]
+    then
+        TODO_ACTIONS_DIR="$TODO_ACTIONS_DIR_ALT"
+    fi
+}
+ *
+ *
+ */
     // === SANITY CHECKS (thanks Karl!) ===
     if (!config) { die('Fatal Error: Cannot read configuration file ' + env.PWD + '/todo.cfg'); }
 
@@ -576,12 +653,19 @@ return function(argv) {
     // console.log('action: ' + action);
 
     if (!action) { usage() };
+/*
+ * JavaScript does not support directory operations.
+ *
+[ -d "$TODO_DIR" ]  || die "Fatal Error: $TODO_DIR is not a directory"
+( cd "$TODO_DIR" )  || die "Fatal Error: Unable to cd to $TODO_DIR"
+ *
+ *
+ */
 
+    // TODO: Write empty files?
     if (env.TODOTXT_PLAIN) {
         for (clr in env) {
-            if (clr.search(/^PRI/) == 0) {
-                env[clr] = env.NONE;
-            }
+            if (clr.search(/^PRI/) == 0) { env[clr] = env.NONE; }
         }
         env.PRI_X = env.NONE;
         env.DEFAULT = env.NONE;
@@ -601,6 +685,14 @@ return function(argv) {
     }
 
     var _addto = function(file, input) {
+/*
+ *
+ *
+    file="$1"
+    input="$2"
+ *
+ *
+ */
 
         input = cleaninput(input);
         if(env.TODOTXT_DATE_ON_ADD) {
@@ -616,25 +708,242 @@ return function(argv) {
         }
     }
 
+    var filtercommand = function(filter, post_filter, search_terms)
+    {
+/*
+ *
+ *
+    filter=${1:-}
+    shift
+    post_filter=${1:-}
+    shift
+ *
+ *
+ */
+        var filters = [];
+
+        for (var i = 0; i < search_terms.length; i++) {
+            var search_term = search_terms[i];
+
+            // See if the first character of $search_term is a dash
+            if (search_term[0] != '-') {
+                // First character isn't a dash: hide lines that don't match
+                // this $search_term
+                filters.push(new RegExp(search_term, 'i'));
+            } else {
+            // First character is a dash: hide lines that match this
+            // $search_term
+
+            // Remove the first character (-) before adding to our filter command
+                filters.push(new RegExp('^(?!.*' + search_term.slice(1) + ')', 'i'));
+            }
+/*
+ * Post filters not supported.
+ *
+    [ -n "$post_filter" ] && {
+        filter="${filter:-}${filter:+ | }${post_filter:-}"
+ *
+ *
+ */
+        }
+        return filters;
+    }
+
+    var _list = function(file, searchTerms) {
+        // console.log('_list()');
+        // console.log(file);
+        // console.log(searchTerms);
+
+        // If the file starts with a "/" use absolute path. Otherwise,
+        // try to find it in either $TODO_DIR or using a relative path
+        var src = null;
+        if (file[0] == '/') {
+            // Absolute path
+            src = file;
+        } else if (filesystem.load(env.TODO_DIR + '/' + file)) {
+            // Path relative to todo.sh directory
+            src = env.TODO_DIR + '/' + file;
+        } else if (filesystem.load(file)) {
+            // Path relative to current working directory
+            src = file;
+        } else if (filesystem.load(env.TODO_DIR + '/' + file + '.txt')) {
+            // Path relative to todo.sh directory, missin file extension
+            src = env.TODO_DIR + '/' + file + '.txt';
+        } else {
+            die('TODO: File ' + file + 'does not exist.');
+        }
+
+        // Get our search arguements, if any
+        // shift ## was file name, new $1 is first search term
+
+        _format(filesystem.load(src), '', searchTerms);
+
+        if (env.TODOTXT_VERBOSE > 0) {
+            ui.echo('--');
+            ui.echo(getPrefix(src) + ': ' + env.numTasks + ' of ' + env.totalTasks + ' tasks shown');
+        }
+        return 0;
+    }
+
+    var _getPadding = function(file)
+    {
+        // We need one level of padding for each power of 10 $LINES uses.
+        var lines = String(file.split('\n').length - 1);
+        return lines.length;
+    }
+
+    var _format = function(file, padding, terms)
+    {
+/*
+ *
+ *
+    # Parameters:    $1: todo input file; when empty formats stdin
+    #                $2: ITEM# number width; if empty auto-detects from $1 / $TODO_FILE.
+    # Precondition:  None
+    # Postcondition: $NUMTASKS and $TOTALTASKS contain statistics (unless $TODOTXT_VERBOSE=0).
+
+    FILE=$1
+    shift
+ *
+ *
+ */
+
+        // Figure out how much padding we need to use, unless this was passed to us.
+        padding = padding || _getPadding(file);
+        // shift
+
+/*
+ * Bash filter commands cannot be run from JavaScript
+ *
+    ## Number the file, then run the filter command,
+    ## then sort and mangle output some more
+    if [[ $TODOTXT_DISABLE_FILTER = 1 ]]; then
+        TODOTXT_FINAL_FILTER="cat"
+    fi
+ *
+ *
+ */
+
+        // from http://stackoverflow.com/a/1267338/117030
+        var zeroFill = function(number, width) {
+            width -= number.toString().length;
+            if ( width > 0 )
+            {
+                return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+            }
+            return number;
+        }
+
+        var highlight = function(colorVar) {
+            var color = env[colorVar] || env.PRI_X;
+            color = color.replace(/\\+033/, '\033');
+            return color;
+        }
+
+        var items = file.split('\n');
+        var nonemptyItems = [];
+        for(var i = 0; i < items.length; i++) {
+            if (items[i].search(/[\x21-\x7E]/) >= 0) {
+                nonemptyItems.push(zeroFill(i + 1, padding) + ' ' + items[i]);
+            }
+        }
+
+        var filters = filtercommand('', '', terms);
+
+        var filtered_items = [];
+
+        if (filters.length) {
+            for(var i=0; i < nonemptyItems.length; i++) {
+                var item = nonemptyItems[i];
+                var eligible = true;
+                for (var j=0; j < filters.length; j++) {
+                    if (item.search(filters[j]) < 0) {
+                        eligible = false;
+                        break;
+                    }
+                }
+                if (eligible) {
+                    filtered_items.push(item);
+                }
+            }
+        } else {
+            filtered_items = nonemptyItems;
+        }
+
+        filtered_items = filtered_items.sort(function(a, b) {
+            return ((a.substr(padding + 1)).toLowerCase() <
+                    (b.substr(padding + 1)).toLowerCase() ? -1 : 1);
+        });
+
+        for(var i = 0; i < filtered_items.length; i++) {
+            var item = filtered_items[i];
+            if (item.match(/^x/)) {   /// TODO: FIX REGEX
+                item = highlight('COLOR_DONE') + item + highlight('DEFAULT');
+            }
+            var match = item.match(/\(([A-Z])\)/);
+            if (match) {
+                item = highlight('PRI_' + match[1]) + item + highlight('DEFAULT');
+            }
+            filtered_items[i] = item;
+        }
+
+        for(var i = 0; i < filtered_items.length; i++) {
+            item = filtered_items[i];
+
+            item = item.replace(new RegExp(env.HIDE_PROJECTS_SUBSTITUTION), '');
+            item = item.replace(new RegExp(env.HIDE_CONTEXTS_SUBSTITUTION), '');
+            item = item.replace(new RegExp(env.HIDE_PRIORITY_SUBSTITUTION), '');
+
+            filtered_items[i] = item;
+        }
+
+
+        for(var i = 0; i < filtered_items.length; i++) {
+            ui.echo(filtered_items[i]);
+        }
+        if (env.TODOTXT_VERBOSE > 0) {
+            env.numTasks = filtered_items.length;
+            env.totalTasks = nonemptyItems.length;
+        }
+        if (env.TODOTXT_VERBOSE > 1) {
+            ui.echo('TODO DEBUG: Filters used were:');
+            ui.echo(filters);
+        }
+    }
+
     // == HANDLE ACTION ==
     action = (action && action.toLowerCase());
-
-    // If the first argument is "command", run the rest of the arguments
-    // using todo.sh builtins.
-    // Else, run a actions script with the name of the command if it exists
-    // or fallback to using a builtin
+/*
+ *
+ *
+## If the first argument is "command", run the rest of the arguments
+## using todo.sh builtins.
+## Else, run a actions script with the name of the command if it exists
+## or fallback to using a builtin
+ *
+ *
+ */
     if (action == 'command') {
         // Get rid of "command" from arguments list
         argv.shift();
         // Reset action to new first argument
         action = argv[0];
         if (action) { action = action.toLowerCase(); }
-    } else if(filesystem.load(env.TODO_ACTIONS_DIR + '/' + action)) {
-        ui.echo('Sorry, custom actions not supported (yet).');
-        return 1;
     }
+/*
+ * Custom actions not supported.
+ *
+elif [ -d "$TODO_ACTIONS_DIR" -a -x "$TODO_ACTIONS_DIR/$action" ]
+then
+    "$TODO_ACTIONS_DIR/$action" "$@"
+    exit $?
+fi
 
-    // Only run if action isn't found in .todo.actions.d
+
+## Only run if $action isn't found in .todo.actions.d
+ *
+ *
+ */
     switch (action) {
         case 'add': case 'a':
             if(!argv[1] && env.TODOTXT_FORCE == 0) {
@@ -665,6 +974,10 @@ return function(argv) {
             break;
         case 'shorthelp':
             shorthelp();
+            break;
+        case 'list': case 'ls':
+            argv.shift();  // Was ls; new $1 is first search term
+            _list(env.TODO_FILE, argv);
             break;
         default:
             usage();
