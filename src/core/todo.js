@@ -1,6 +1,6 @@
             Todo = function(env, filesystem, ui) {
 
-var version = function() {
+function version() {
     ui.echo(
         'TODO.HTML Command Line Interface v' + env.VERSION + '\n' +
         '\n' +
@@ -15,7 +15,7 @@ var version = function() {
 
 var oneline_usage = env.TODO_SH + "[-fhpantvV] [-d todo_config] action [task_number] [task_description]\n";
 
-var usage = function()
+function usage()
 {
     ui.echo(
         'Usage: ' + oneline_usage +
@@ -24,7 +24,7 @@ var usage = function()
 
 }
 
-var shorthelp = function()
+function shorthelp()
 {
     ui.echo(
         '  Usage: ' + oneline_usage + '\n' +
@@ -67,7 +67,7 @@ var shorthelp = function()
     exit(0);
 }
 
-var help = function()
+function help()
 {
     ui.echo(
         '  Usage: '+ oneline_usage + '\n' +
@@ -286,12 +286,12 @@ addonHelp()
  *
  */
 
-var die = function(msg) {
+function die(msg) {
     ui.echo(msg);
     exit(1);
 }
 
-var cleaninput = function(input, forSed)
+function cleaninput(input, forSed)
 {
 /*
  *
@@ -319,7 +319,7 @@ var cleaninput = function(input, forSed)
     return input;
 }
 
-var getPrefix = function(todo_file)
+function getPrefix(todo_file)
 {
 /*
  *
@@ -340,7 +340,7 @@ var getPrefix = function(todo_file)
 // #comments and process export commands. I know it is not perfect, but
 // it should work satisfactorily for "well-formed" config files.
 
-var processConfig = function(todoFileContents) {
+function processConfig(todoFileContents) {
 
     function processTodoCfgLine(line) {
         // ignore #comments
@@ -418,7 +418,7 @@ return function(argv) {
                     // Zero or even value -- show context names
                     env.HIDE_CONTEXTS_SUBSTITUTION = /^/;
                 } else {
-                    env.HIDE_CONTEXTS_SUBSTITUTION = /\s@[\x21-\x7E]{1,}/;
+                    env.HIDE_CONTEXTS_SUBSTITUTION = /\s@[\x21-\x7E]{1,}/g;
                 }
                 break;
             case '+':
@@ -439,7 +439,7 @@ return function(argv) {
                     // Zero or even value -- show context names
                     env.HIDE_PROJECTS_SUBSTITUTION = /^/;
                 } else {
-                    env.HIDE_PROJECTS_SUBSTITUTION = /\s[+][\x21-\x7E]{1,}/;
+                    env.HIDE_PROJECTS_SUBSTITUTION = /\s[+][\x21-\x7E]{1,}/g;
                 }
                 break;
             case 'a':
@@ -497,7 +497,7 @@ return function(argv) {
                     // Zero or even value -- show context names
                     env.HIDE_PRIORITY_SUBSTITUTION = /^/;
                 } else {
-                    env.HIDE_PRIORITY_SUBSTITUTION = /\([A-Z]\)\s/;
+                    env.HIDE_PRIORITY_SUBSTITUTION = /\([A-Z]\)\s/g;
                 }
                 break;
             case 't':
@@ -672,7 +672,7 @@ fi
         env.COLOR_DONE = env.NONE;
     }
 
-    var formattedDate = function() {
+    function formattedDate() {
         var date = new Date();
 
         var result = date.getFullYear() + '-';
@@ -684,7 +684,7 @@ fi
         return  result;
     }
 
-    var _addto = function(file, input) {
+    function _addto(file, input) {
 /*
  *
  *
@@ -708,7 +708,7 @@ fi
         }
     }
 
-    var filtercommand = function(filter, post_filter, search_terms)
+    function filtercommand(filter, post_filter, search_terms)
     {
 /*
  *
@@ -749,7 +749,7 @@ fi
         return filters;
     }
 
-    var _list = function(file, searchTerms) {
+    function _list(file, searchTerms) {
         // console.log('_list()');
         // console.log(file);
         // console.log(searchTerms);
@@ -785,14 +785,14 @@ fi
         return 0;
     }
 
-    var _getPadding = function(file)
+    function _getPadding(file)
     {
         // We need one level of padding for each power of 10 $LINES uses.
         var lines = String(file.split('\n').length - 1);
         return lines.length;
     }
 
-    var _format = function(file, padding, terms)
+    function _format(file, padding, terms)
     {
 /*
  *
@@ -825,7 +825,7 @@ fi
  */
 
         // from http://stackoverflow.com/a/1267338/117030
-        var zeroFill = function(number, width) {
+        function zeroFill(number, width) {
             width -= number.toString().length;
             if ( width > 0 )
             {
@@ -834,7 +834,7 @@ fi
             return number;
         }
 
-        var highlight = function(colorVar) {
+        function highlight(colorVar) {
             var color = env[colorVar] || env.PRI_X;
             color = color.replace(/\\+033/, '\033');
             return color;
