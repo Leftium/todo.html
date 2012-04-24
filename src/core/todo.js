@@ -760,17 +760,17 @@ fi
         if (file[0] == '/') {
             // Absolute path
             src = file;
-        } else if (filesystem.load(env.TODO_DIR + '/' + file)) {
+        } else if (typeof filesystem.load(env.TODO_DIR + '/' + file) == 'string') {
             // Path relative to todo.sh directory
             src = env.TODO_DIR + '/' + file;
-        } else if (filesystem.load(file)) {
+        } else if (typeof filesystem.load(file) == 'string') {
             // Path relative to current working directory
             src = file;
-        } else if (filesystem.load(env.TODO_DIR + '/' + file + '.txt')) {
+        } else if (typeof filesystem.load(env.TODO_DIR + '/' + file + '.txt') == 'string') {
             // Path relative to todo.sh directory, missin file extension
             src = env.TODO_DIR + '/' + file + '.txt';
         } else {
-            die('TODO: File ' + file + 'does not exist.');
+            die('TODO: File ' + file + ' does not exist.');
         }
 
         // Get our search arguements, if any
