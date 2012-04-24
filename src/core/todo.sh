@@ -52,8 +52,16 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
 
     // Synchronous methods that match more closely with twFile
     filesystem = {
+        // Cygwin uses different paths than (Windows) node.js
+        _convertCygPath: function(filePath) {
+            filePath = filePath.replace(/^\/cygdrive\/(.)/, '$1:');
+            return filePath;
+        },
+
         load: function(filePath) {
             result = null;
+
+            filePath = this._convertCygPath(filePath);
 
             try {
                 result = fs.readFileSync(filePath, 'UTF8');
@@ -63,6 +71,9 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
         },
 
         save: function(filePath, content) {
+
+            filePath = this._convertCygPath(filePath);
+
             try {
                 fs.writeFileSync(filePath, content, 'UTF8');
             } catch(e) {
@@ -72,6 +83,9 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
         },
 
         append: function(filePath, appendContent) {
+
+            filePath = this._convertCygPath(filePath);
+
             var content = this.load(filePath);
             if(typeof(content) == 'string') {
                 content += appendContent + '\n';
@@ -85,13 +99,14 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
 
     var env = {};
     for (e in process.env) env[e] = process.env[e];
+    env.HOME = argv.shift();
 
     var todo = new Todo(env, filesystem, ui);
     var exitCode = todo(argv);
     process.exit(exitCode);
 END_OF_JS
 
-node -e "$JS_WRAPPER" PREVENT_NODE_FROM_EATING_OPTIONS $@
+node -e "$JS_WRAPPER" PREVENT_NODE_FROM_EATING_OPTIONS "$HOME" $@
 
-echo [$TODO_SH exited with: $?]
+# echo [$TODO_SH exited with: $?]
 exit $?

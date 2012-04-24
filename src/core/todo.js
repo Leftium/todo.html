@@ -13,7 +13,7 @@ function version() {
     exit(1);
 }
 
-var oneline_usage = env.TODO_SH + "[-fhpantvV] [-d todo_config] action [task_number] [task_description]\n";
+var oneline_usage = env.TODO_SH + " [-fhpantvV] [-d todo_config] action [task_number] [task_description]\n";
 
 function usage()
 {
@@ -346,6 +346,12 @@ function processConfig(todoFileContents) {
         // ignore #comments
         line = line.replace(/#.*/, '');
 
+        // todo.txt-cli tests touch a file to confirm config file run
+        var touchFile = line.match(/touch\s+(.*)/);
+        if (touchFile) {
+            filesystem.save(touchFile[1].trim(), '');
+        }
+
         var exportArgs = line.match(/export\s+(.*)=(.*)/);
         if (exportArgs) {
             var name = exportArgs[1];
@@ -609,7 +615,8 @@ fi
  *
  */
     // === SANITY CHECKS (thanks Karl!) ===
-    if (!config) { die('Fatal Error: Cannot read configuration file ' + env.PWD + '/todo.cfg'); }
+
+    if (!config) { die('Fatal Error: Cannot read configuration file ' + env.TODOTXT_CFG_FILE); }
 
     processConfig(config);
 

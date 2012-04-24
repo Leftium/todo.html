@@ -494,7 +494,10 @@ test_init_todo () {
 
 	# Install latest todo.sh
 	mkdir bin
-	ln -s "$TEST_DIRECTORY/../todo.sh" bin/todo.sh
+	ln -s "$TEST_DIRECTORY/../todo.sh"   bin/todo.sh
+	cp    "$TEST_DIRECTORY/../todo.js"   todo.js
+	cp    "$TEST_DIRECTORY/../getopt.js" getopt.js
+
 
 	# Initialize a hack date script
 	TODO_TEST_REAL_DATE=$(which date)
