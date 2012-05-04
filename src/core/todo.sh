@@ -126,7 +126,7 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
     process.exit(exitCode);
 END_OF_JS
 
-node -e "$JS_WRAPPER" PREVENT_NODE_FROM_EATING_OPTIONS "$HOME" $@
+node -e "$JS_WRAPPER" PREVENT_NODE_FROM_EATING_OPTIONS "$HOME" "$@"
 
 # echo [$TODO_SH exited with: $?]
 exit $?
