@@ -336,6 +336,29 @@ function getPrefix(todo_file)
     return todo_file.toUpperCase();
 }
 
+function getTodo(item, todoFile)
+{
+/*
+ *
+ *
+    # Parameters:    $1: task number
+    #                $2: Optional todo file
+    # Precondition:  $errmsg contains usage message.
+    # Postcondition: $todo contains task text.
+ *
+ *
+ */
+
+    if(!item) { die(env.errmsg) };
+    if(item.match(/[^0-9]/)) { die(env.errmsg) };
+
+    var todo = filesystem.load(todoFile || env.TODO_FILE).split('\n')[parseInt(item) - 1];
+
+    if (!todo) { die(getPrefix(todoFile) + ': No Task ' + item + '.') };
+
+    return todo;
+}
+
 // This method roughly emulates how Bash would process todo.cfg: ignore
 // #comments and process export commands. I know it is not perfect, but
 // it should work satisfactorily for "well-formed" config files.
@@ -992,6 +1015,39 @@ fi
                 _addto(dest, input);
             } else {
                 die('TODO: Destination file ' + dest + ' does not exist.');
+            }
+            break;
+
+        case 'del': case 'rm':
+            // replace deleted line with a blank line when TODOTXT_PRESERVE_LINE_NUMBERS is 1
+            env.errmsg = 'usage: ' + env.TODO_SH + ' del ITEM# [TERM]';
+            var item = argv[1];
+            var todo = getTodo(item);
+
+            if (!argv[2]) {
+                var answer;
+                if (env.TODOTXT_FORCE == 0) {
+                    answer = ui.ask('Delete ' + todo + '? (y/n)');
+                } else {
+                    answer = 'y';
+                }
+                if (answer == 'y') {
+                    var newTodoFile = filesystem.load(env.TODO_FILE).split('\n');
+                    if (env.TODOTXT_PRESERVE_LINE_NUMBERS == 0) {
+                        // delete line (changes line numbers)
+                        newTodoFile.splice(parseInt(item) - 1, 1);
+                    } else {
+                        newTodoFile[parseInt(item) - 1] = '';
+                    }
+                    newTodoFile = newTodoFile.join('\n').replace(/\n$/,'');
+                    filesystem.save(env.TODO_FILE, newTodoFile);
+                    if (env.TODOTXT_VERBOSE > 0) {
+                        ui.echo(item + ' ' + todo);
+                        ui.echo('TODO: ' + item + ' deleted.');
+                    }
+                } else {
+                    ui.echo('TODO: No tasks were deleted.');
+                }
             }
             break;
 
