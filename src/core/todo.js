@@ -891,8 +891,8 @@ fi
         }
 
         filteredItems = filteredItems.sort(function(a, b) {
-            return ((a.substr(padding + 1)).toLowerCase() <
-                    (b.substr(padding + 1)).toLowerCase() ? -1 : 1);
+            return ((a.substr(padding + 1)).toUpperCase() <
+                    (b.substr(padding + 1)).toUpperCase() ? -1 : 1);
         });
 
         for(var i = 0; i < filteredItems.length; i++) {
