@@ -18,6 +18,18 @@ VERSION="DEV"
 export TODO_SH TODO_FULL_SH VERSION
 
 read -r -d '' JS_WRAPPER <<'END_OF_JS'
+    db = function(tag, msg) {
+        var re = new RegExp(tag, 'i');
+        if (typeof (db.tags) !== 'undefined') {
+            for (var i = 0; i < db.tags.length; i++) {
+                if (db.tags[i].match(re)) {
+                    console.log(msg);
+                }
+            }
+        }
+    };
+    db.tags  = ['contexts'];
+
     require('./getopt.js');
     require('./todo.js');
 
@@ -63,16 +75,21 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
 
             filePath = this._convertCygPath(filePath);
 
+            db('fs', 'LOAD: ' + filePath);
+
             try {
                 result = fs.readFileSync(filePath, 'UTF8');
             } catch(e) {
             }
+            db('fs', 'LOAD: ' + result);
             return result;
         },
 
         save: function(filePath, content) {
 
             filePath = this._convertCygPath(filePath);
+
+            db('fs', 'SAVE: ' + filePath);
 
             try {
                 fs.writeFileSync(filePath, content, 'UTF8');
@@ -86,7 +103,10 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
 
             filePath = this._convertCygPath(filePath);
 
+            db('fs', 'APPEND: ' + filePath);
+
             var content = this.load(filePath);
+            db('fs', 'APPEND: '+ content);
             if(typeof(content) == 'string') {
                 content += appendContent + '\n';
                 if (this.save(filePath, content)) {

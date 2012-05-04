@@ -426,7 +426,7 @@ test_done () {
 	trap - EXIT
 	test_results_dir="$TEST_DIRECTORY/test-results"
 	mkdir -p "$test_results_dir"
-	test_results_path="$test_results_dir/${0%.sh}-$$"
+	test_results_path="$test_results_dir/${0%.sh}-$$.results"
 
 	echo "total $test_count" >> $test_results_path
 	echo "success $test_success" >> $test_results_path

@@ -639,7 +639,7 @@ fi
     if (env.OVR_TODOTXT_DISABLE_FILTER) {
         env.TODOTXT_DISABLE_FILTER = env.OVR_TODOTXT_DISABLE_FILTER;
     }
-    if (env.OVR_TODOTXT_VERBOSE) {
+    if (env.OVR_TODOTXT_VERBOSE !== undefined) {
         env.TODOTXT_VERBOSE = env.OVR_TODOTXT_VERBOSE;
     }
     if (env.OVR_TODOTXT_DEFAULT_ACTION) {
@@ -669,7 +669,18 @@ fi
  *
  */
 
-    // TODO: Write empty files?
+    // Create files if they don't exist yet.
+
+    if (typeof(filesystem.load(env.TODO_FILE)) != 'string') {
+        filesystem.save(env.TODO_FILE, '');
+    }
+    if (typeof(filesystem.load(env.DONE_FILE)) != 'string') {
+        filesystem.save(env.DONE_FILE, '');
+    }
+    if (typeof(filesystem.load(env.REPORT_FILE)) != 'string') {
+        filesystem.save(env.REPORT_FILE, '');
+    }
+
     if (env.TODOTXT_PLAIN) {
         for (clr in env) {
             if (clr.search(/^PRI/) == 0) { env[clr] = env.NONE; }
@@ -704,7 +715,7 @@ fi
         input = cleaninput(input);
         if(env.TODOTXT_DATE_ON_ADD) {
             var now = formattedDate();
-            input = input.replace(/^(\([A-Z]\) ){0,1}/, '$1' + now);
+            input = input.replace(/^(\([A-Z]\) ){0,1}/i, '$1' + now);
         }
         var result = filesystem.append(file, input);
         // console.log('env.TODOTXT_VERBOSE: ' + env.TODOTXT_VERBOSE);
@@ -738,25 +749,21 @@ fi
                 // this $search_term
                 filters.push(new RegExp(search_term, 'i'));
             } else {
-            // First character is a dash: hide lines that match this
-            // $search_term
+                // First character is a dash: hide lines that match this
+                // $search_term
 
-            // Remove the first character (-) before adding to our filter command
+                // Remove the first character (-) before adding to our filter command
                 filters.push(new RegExp('^(?!.*' + search_term.slice(1) + ')', 'i'));
             }
-/*
- * Post filters not supported.
- *
-    [ -n "$post_filter" ] && {
-        filter="${filter:-}${filter:+ | }${post_filter:-}"
- *
- *
- */
+        }
+
+        if (post_filter) {
+            filters.push(post_filter);
         }
         return filters;
     }
 
-    function _list(file, searchTerms) {
+    function _list(file, searchTerms, post_filter_command) {
         // console.log('_list()');
         // console.log(file);
         // console.log(searchTerms);
@@ -783,7 +790,7 @@ fi
         // Get our search arguements, if any
         // shift ## was file name, new $1 is first search term
 
-        _format(filesystem.load(src), '', searchTerms);
+        _format(filesystem.load(src), '', searchTerms, post_filter_command);
 
         if (env.TODOTXT_VERBOSE > 0) {
             ui.echo('--');
@@ -799,7 +806,7 @@ fi
         return lines.length;
     }
 
-    function _format(file, padding, terms)
+    function _format(file, padding, terms, post_filter_command, silent, numTask)
     {
 /*
  *
@@ -842,20 +849,26 @@ fi
         }
 
         function highlight(colorVar) {
-            var color = env[colorVar] || env.PRI_X;
-            color = color.replace(/\\+033/, '\033');
+            var color = env[colorVar.toUpperCase()] || env.PRI_X;
+            color = color.replace(/\\+033/i, '\033');
             return color;
         }
 
         var items = file.split('\n');
         var nonemptyItems = [];
+        db('numtask', 'numtask:' + numTask);
         for(var i = 0; i < items.length; i++) {
             if (items[i].search(/[\x21-\x7E]/) >= 0) {
-                nonemptyItems.push(zeroFill(i + 1, padding) + ' ' + items[i]);
+                var num = i + 1;
+                if (numTask && numTask < num) {
+                    num = 0;
+                }
+                nonemptyItems.push(zeroFill(num, padding) + ' ' + items[i]);
+                db('test', i);
             }
         }
 
-        var filters = filtercommand('', '', terms);
+        var filters = filtercommand('', post_filter_command, terms);
 
         var filteredItems = [];
 
@@ -887,7 +900,7 @@ fi
             if (item.match(/^x/)) {   /// TODO: FIX REGEX
                 item = highlight('COLOR_DONE') + item + highlight('DEFAULT');
             }
-            var match = item.match(/\(([A-Z])\)/);
+            var match = item.match(/\(([A-Z])\)/i);
             if (match) {
                 item = highlight('PRI_' + match[1]) + item + highlight('DEFAULT');
             }
@@ -904,9 +917,10 @@ fi
             filteredItems[i] = item;
         }
 
-
-        for(var i = 0; i < filteredItems.length; i++) {
-            ui.echo(filteredItems[i]);
+        if (!silent) {
+            for(var i = 0; i < filteredItems.length; i++) {
+                ui.echo(filteredItems[i]);
+            }
         }
         if (env.TODOTXT_VERBOSE > 0) {
             env.numTasks = filteredItems.length;
@@ -916,6 +930,7 @@ fi
             ui.echo('TODO DEBUG: Filters used were:');
             ui.echo(filters);
         }
+        return filteredItems.length;
     }
 
     // == HANDLE ACTION ==
@@ -962,6 +977,7 @@ fi
             // console.log(env.TODO_FILE);
             _addto(env.TODO_FILE, input);
             break;
+
        case 'addto':
             if(!argv[1]) { die('usage: ' + env.TODO_SH + ' addto DEST "TODO ITEM"'); }
             var dest = env.TODO_DIR + '/' +  argv[1];
@@ -979,13 +995,101 @@ fi
         case 'help':
             help();
             break;
+
         case 'shorthelp':
             shorthelp();
             break;
+
         case 'list': case 'ls':
             argv.shift();  // Was ls; new $1 is first search term
             _list(env.TODO_FILE, argv);
             break;
+
+        case 'listall': case 'lsa':
+            argv.shift();  // Was lsa; new $1 is first search term
+
+            var total = filesystem.load(env.TODO_FILE).split('\n').length - 1;
+            var padding = String(total).length;
+
+            var todoContents = filesystem.load(env.TODO_FILE);
+            var doneContents = filesystem.load(env.DONE_FILE);
+            var combined_files = todoContents + doneContents;
+
+            var saved_todo_text_verbose = env.TODOTXT_VERBOSE;
+            env.TODOTXT_VERBOSE=0;
+            var tasknum = _format(todoContents, padding, argv, '', true);
+            _format(combined_files, padding, argv, '', false, tasknum);
+            if (saved_todo_text_verbose > 0) {
+                var tdone = filesystem.load(env.DONE_FILE).split('\n').length - 1;
+                var tasknum = _format(todoContents, padding, argv, '', true);
+                var donenum = _format(doneContents, padding, argv, '', true);
+                ui.echo('--');
+                ui.echo(getPrefix(env.TODO_FILE) + ': ' + tasknum + ' of ' + total + ' tasks shown');
+                ui.echo(getPrefix(env.DONE_FILE) + ': ' + donenum + ' of ' + tdone + ' tasks shown');
+                ui.echo('total ' + (tasknum + donenum) + ' of ' + (total + tdone) + ' tasks shown');
+            }
+            break;
+
+        case 'listfile': case 'lf':
+            argv.shift(); // Was listfile, next $1 is file name
+            if (argv[0] === undefined) {
+                // nothing
+            } else {
+                var file = argv.shift(); // Was filename; next $1 is first search term
+                _list(file, argv);
+            }
+            break;
+
+        case 'listcon': case 'lsc':
+            var file = filesystem.load(env.TODO_FILE);
+            var contexts = file.match(/\s@[\x21-\x7E]+/g);
+
+            if (contexts) {
+                for (var i = 0; i < contexts.length; i++) {
+                    contexts[i] = contexts[i].trim();
+                }
+                contexts.sort();
+                ui.echo(contexts[0].trim());
+                for (var i = 1; i < contexts.length; i++) {
+                    if (contexts[i] != contexts[i-1]) {
+                        ui.echo(contexts[i].trim());
+                    }
+                }
+            }
+            break;
+
+        case 'listproj': case 'lsprj':
+            var file = filesystem.load(env.TODO_FILE);
+            var contexts = file.match(/\s\+[\x21-\x7E]+/g);
+
+            if (contexts) {
+                for (var i = 0; i < contexts.length; i++) {
+                    contexts[i] = contexts[i].trim();
+                }
+                contexts.sort();
+                ui.echo(contexts[0].trim());
+                for (var i = 1; i < contexts.length; i++) {
+                    if (contexts[i] != contexts[i-1]) {
+                        ui.echo(contexts[i].trim());
+                    }
+                }
+            }
+            break;
+
+        case 'listpri': case 'lsp':
+            argv.shift(); // was "listpri", new $1 is priority to list or first TERM
+
+            var pri = argv[0];
+            if (pri) { pri = pri.match(/^([A-Z]\-[A-Z])|([A-Z])$/i) };
+            if (pri) {
+                pri = pri[0]
+                argv.shift();
+            } else {
+               pri = 'A-Z';
+            }
+            _list(env.TODO_FILE, argv, new RegExp('^ *[0-9]\+ \\([' + pri + ']\\) ', 'i'));
+            break;
+
         default:
             usage();
     }
