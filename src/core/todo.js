@@ -692,6 +692,9 @@ fi
 
     function formattedDate() {
         var date = new Date();
+        if(env.TODO_TEST_TIME) {
+            date = new Date(env.TODO_TEST_TIME * 1000);
+        }
 
         var result = date.getFullYear() + '-';
         if (date.getMonth() < 9) {
