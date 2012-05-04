@@ -3,6 +3,9 @@
 # Copyright (c) 2005 Junio C Hamano
 #
 
+# These are tests not supported by todo.html core:
+SKIP_TESTS='t0002 t1020.[67] t6???'
+
 # if --tee was passed, write the output not only to the terminal, but
 # additionally to the file test-results/$BASENAME.out, too.
 case "$TEST_TEE_STARTED, $* " in

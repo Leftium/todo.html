@@ -35,7 +35,7 @@ clean:
 #
 TESTS = $(wildcard tests/t[0-9][0-9][0-9][0-9]-*.sh)
 # TEST_OPTIONS=--verbose --tee results
-TEST_OPTIONS= --tee
+# TEST_OPTIONS= --tee
 
 test-pre-clean:
 	rm -rf tests/test-results "tests/trash directory"*
@@ -47,7 +47,7 @@ $(TESTS): test-pre-clean
 
 test: aggregate-results
 	tests/aggregate-results.sh tests/test-results/*.results
-	# rm -rf tests/test-results
+	rm -rf tests/test-results
     
 # Force tests to get run every time
 .PHONY: test test-pre-clean aggregate-results $(TESTS)
