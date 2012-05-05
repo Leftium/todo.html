@@ -31,7 +31,7 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
     db.tags  = ['contexts'];
 
     require('./getopt.js');
-    require('./todo.js');
+    todo = require('./todo.js');
 
     fs = require('fs');
 
@@ -121,8 +121,8 @@ read -r -d '' JS_WRAPPER <<'END_OF_JS'
     for (e in process.env) env[e] = process.env[e];
     env.HOME = argv.shift();
 
-    var todo = new Todo(env, filesystem, ui);
-    var exitCode = todo(argv);
+    todo.init(env, filesystem, ui);
+    var exitCode = todo.run(argv);
     process.exit(exitCode);
 END_OF_JS
 
