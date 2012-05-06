@@ -887,15 +887,14 @@ root.run = (argv) ->
         when 'listpri', 'lsp'
             argv.shift() # was "listpri", new $1 is priority to list or first TERM
 
-            pri = argv[0]
-            if (pri) then pri = pri.match(/^([A-Z]\-[A-Z])|([A-Z])$/i)
+            pri = argv[0]?.toUpperCase().match(/^(([A-Z]\-[A-Z])|([A-Z]))$/)
             if (pri)
                 pri = pri[0]
                 argv.shift()
             else
                pri = 'A-Z'
 
-            _list(env.TODO_FILE, argv, new RegExp('^ *[0-9]\+ \\([' + pri + ']\\) ', 'i'))
+            _list(env.TODO_FILE, argv, new RegExp('^ *[0-9]\+ \\([' + pri + ']\\) '))
 
         when 'pri', 'p'
             item = argv[1]
