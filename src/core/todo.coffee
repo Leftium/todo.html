@@ -307,6 +307,10 @@ getTodo = (item, todoFile) ->
     if (!todo) then die("#{getPrefix(todoFile)}: No task #{item}.")
     return todo
 
+regexpEscape = (str) ->
+    # based on http://simonwillison.net/2006/jan/20/escape/
+    str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")
+
 
 replaceOrPrepend = (action, argv) ->
     switch action
@@ -340,7 +344,7 @@ replaceOrPrepend = (action, argv) ->
     # change (replace/prepend) and re-insert the existing priority and prepended
     # date again.
 
-    input = input.replace(new RegExp("^#{priority}#{prepdate}"), '')
+    todo = todo.replace(new RegExp("^#{regexpEscape(priority)}#{prepdate}"), '')
     newtodo = todo.replace(/.*/, "#{priority}#{prepdate}#{input}#{backref}")
 
     todofile = filesystem.load(env.TODO_FILE)?.split('\n')
@@ -633,7 +637,7 @@ root.run = (argv) ->
             ui.echo(getPrefix(file) + ': ' + tasknum + ' added.')
 
     shellquote = (str) ->
-        # from http://simonwillison.net/2006/jan/20/escape/
+        # based on http://simonwillison.net/2006/jan/20/escape/
         str.replace(/[-\{}()+?,\\^$|#\s]/g, "\\$&")
 
 
@@ -919,6 +923,10 @@ root.run = (argv) ->
                pri = 'A-Z'
 
             _list(env.TODO_FILE, argv, new RegExp('^ *[0-9]\+ \\([' + pri + ']\\) '))
+
+        when 'prepend', 'prep'
+            env.errmsg = "usage: #{env.TODO_SH} prepend ITEM# \"TEXT TO PREPEND\""
+            replaceOrPrepend 'prepend', argv
 
         when 'pri', 'p'
             item = argv[1]
