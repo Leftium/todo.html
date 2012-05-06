@@ -1,6 +1,12 @@
 root = exports ? this
 oneline_usage = env = filesystem = ui = {};
 
+# from http://coffeescriptcookbook.com/chapters/arrays/removing-duplicate-elements-from-arrays
+Array::unique = ->
+  output = {}
+  output[@[key]] = @[key] for key in [0...@length]
+  (value for key, value of output)
+
 
 version = ->
     ui.echo("""
@@ -471,10 +477,10 @@ root.run = (argv) ->
                 env.HIDE_PRIORITY_LABELS++
                 if ((env.HIDE_PRIORITY_LABELS % 2) is 0)
                     ## Zero or even value -- show priority labels
-                    env.HIDE_PRIORITY_SUBSTITUTION = /^/
+                    env.HIDE_PRIORITY_SUBSTITUTION = /^\(\)/
                 else
                     ## One or odd value -- hide priority labels
-                    env.HIDE_PRIORITY_SUBSTITUTION = /\([A-Z]\)\s/g
+                    env.HIDE_PRIORITY_SUBSTITUTION = /([0-9]+ )\([A-Z]\)\s/
             when 't'
                 env.OVR_TODOTXT_DATE_ON_ADD = 1
             when 'T'
@@ -626,6 +632,10 @@ root.run = (argv) ->
             ui.echo(tasknum + ' ' + input)
             ui.echo(getPrefix(file) + ': ' + tasknum + ' added.')
 
+    shellquote = (str) ->
+        # from http://simonwillison.net/2006/jan/20/escape/
+        str.replace(/[-\{}()+?,\\^$|#\s]/g, "\\$&")
+
 
     filtercommand = (filter, post_filter, search_terms) ->
         filters = []
@@ -635,13 +645,13 @@ root.run = (argv) ->
             if (search_term[0] != '-')
                 ## First character isn't a dash: hide lines that don't match
                 ## this $search_term
-                filters.push(new RegExp(search_term, 'i'))
+                filters.push(new RegExp(shellquote(search_term), 'i'))
             else
                 ## First character is a dash: hide lines that match this
                 ## $search_term
 
                 ## Remove the first character (-) before adding to our filter command
-                filters.push(new RegExp("^(?!.*#{search_term[1..]})", 'i'))
+                filters.push(new RegExp("^(?!.*#{shellquote(search_term[1..])})", 'i'))
 
         if (post_filter)
             filters.push(post_filter)
@@ -736,9 +746,9 @@ root.run = (argv) ->
             return if a < b then -1 else 1)
 
         for item, i in filteredItems
-            if (item.match(/^x/))     # TODO: FIX REGEX
+            if (item.match(/^[0-9]+ x/))     # TODO: FIX REGEX
                 item = highlight('COLOR_DONE') + item + highlight('DEFAULT')
-            match = item.match(/\(([A-Z])\)/i)
+            match = item.match(/^[0-9]+ \(([A-Z])\)/i)
             if (match)
                 item = highlight('PRI_' + match[1]) + item + highlight('DEFAULT')
             filteredItems[i] = item
@@ -746,7 +756,8 @@ root.run = (argv) ->
         for item, i in filteredItems
             item = item.replace(new RegExp(env.HIDE_PROJECTS_SUBSTITUTION), '')
             item = item.replace(new RegExp(env.HIDE_CONTEXTS_SUBSTITUTION), '')
-            item = item.replace(new RegExp(env.HIDE_PRIORITY_SUBSTITUTION), '')
+            item = item.replace(env.HIDE_PRIORITY_SUBSTITUTION, '$1')
+            item = item.replace(new RegExp(env.HIDE_CUSTOM_SUBSTITUTION, 'g'), '')
 
             filteredItems[i] = item
 
@@ -862,27 +873,40 @@ root.run = (argv) ->
 
         when 'listcon', 'lsc'
             file = filesystem.load(env.TODO_FILE)
-            contexts = file.match(/\s@[\x21-\x7E]+/g)
+
+            if (filenames = env.TODOTXT_SOURCEVAR?.split(' '))
+                file = ''
+                for filename in filenames
+                    filename = filename.replace(/[(")]/g, '')
+                    if filename is '$DONE_FILE'
+                        filename = env.DONE_FILE
+                    if filename is '$TODO_FILE'
+                        filename = env.TODO_FILE
+
+                    file += filesystem.load(filename.trim()) ? ''
+
+            contexts = file.match(/(^|\s)@[\x21-\x7E]+/g)
 
             if (contexts)
                 contexts = (context.trim() for context in contexts)
                 contexts.sort()
-                ui.echo(contexts[0])
-                for context, i in contexts[1..]
-                    if (context != contexts[i-1])
-                        ui.echo(context)
+
+                contexts = contexts.unique()
+
+                ui.echo context for context in contexts
 
         when 'listproj', 'lsprj'
             file = filesystem.load(env.TODO_FILE);
-            projects = file.match(/\s\+[\x21-\x7E]+/g);
+
+            projects = file.match(/(^|\s)\+[\x21-\x7E]+/g);
 
             if (projects)
                 projects = (project.trim() for project in projects)
                 projects.sort()
-                ui.echo(projects[0])
-                for project, i in projects[1..]
-                    if (project != projects[i-1])
-                        ui.echo(project)
+
+                projects = projects.unique()
+
+                ui.echo project for project in projects
 
         when 'listpri', 'lsp'
             argv.shift() # was "listpri", new $1 is priority to list or first TERM
