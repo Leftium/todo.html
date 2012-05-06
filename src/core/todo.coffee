@@ -897,6 +897,42 @@ root.run = (argv) ->
 
             _list(env.TODO_FILE, argv, new RegExp('^ *[0-9]\+ \\([' + pri + ']\\) ', 'i'))
 
+        when 'pri', 'p'
+            item = argv[1]
+            newpri = argv[2]?.toUpperCase()
+
+            env.errmsg = "usage: #{env.TODO_SH} pri ITEM# PRIORITY\n" +
+                         "note: PRIORITY must be anywhere from A to Z."
+
+            if argv.length isnt 3 then die env.errmsg
+            if not newpri.match(/^[A-Z]/) then die env.errmsg
+
+            todo = getTodo item
+
+            oldpri = ''
+            if todo.match(/^\([A-Z]\) /)
+                oldpri = todo[1]
+
+            if oldpri isnt newpri
+                newtodo = todo.replace(/^\(.\) /, '').replace(/^/, "(#{newpri}) ")
+
+                todofile = filesystem.load(env.TODO_FILE)?.split('\n')
+                if (todofile?)
+                    todofile[parseInt(item) - 1] = newtodo
+                    filesystem.save(env.TODO_FILE, todofile.join('\n'))
+
+            if env.TODOTXT_VERBOSE > 0
+                newtodo ?= todo
+                ui.echo "#{item} #{newtodo}"
+                if oldpri isnt newpri
+                    if oldpri
+                        ui.echo "TODO: #{item} re-prioritized from (#{oldpri}) to (#{newpri})."
+                    else
+                        ui.echo "TODO: #{item} prioritized (#{newpri})."
+
+                if oldpri is newpri
+                    ui.echo "TODO: #{item} already prioritized (#{newpri})."
+
         when 'replace'
             env.errmsg = "usage: #{env.TODO_SH} replace ITEM# \"UPDATED ITEM\""
             replaceOrPrepend('replace', argv)
