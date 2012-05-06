@@ -275,14 +275,6 @@ cleaninput = (input, forSed) ->
     input = input.replace(/\r/, ' ')
     input = input.replace(/\n/, ' ')
 
-    if (forSed)
-        # This action uses sed with "|" as the substitution separator, and & as
-        # the matched string; these must be escaped.
-        # Backslashes must be escaped, too, and before the other stuff.
-        input = input.replace(/\/\//, '\/\/\/\/')
-        input = input.replace(/|/, '\\|/')
-        input = input.replace(/&/, '\\&')
-
     return input
 
 
@@ -306,8 +298,58 @@ getTodo = (item, todoFile) ->
 
     todo = filesystem.load(todoFile ? env.TODO_FILE).split('\n')[parseInt(item) - 1]
 
-    if (!todo) then die("#{getPrefix(todoFile)}: No Task #{item}.")
+    if (!todo) then die("#{getPrefix(todoFile)}: No task #{item}.")
     return todo
+
+
+replaceOrPrepend = (action, argv) ->
+    switch action
+        when 'replace'
+            backref = ''
+            querytext = 'Replacement: '
+        when 'prepend'
+            backref = ' $&'
+            querytext = 'Prepend: '
+
+    argv.shift(); item = argv.shift()
+    todo = getTodo(item)
+
+    if (not argv[0] && env.TODOTXT_FORCE is 0)
+        input = ui.ask(querytext)
+    else
+        input = argv[0..].join(' ')
+    input = cleaninput(input)
+
+    # Retrieve existing priority and prepended date
+    matches = todo.match(/^(\(.\) ){0,1}([0-9]{2,4}-[0-9]{2}-[0-9]{2} ){0,1}.*/)
+    priority = matches?[1] ? ''
+    prepdate = matches?[2] ? ''
+
+    if prepdate and action is 'replace' and input.match(/^[0-9]{2,4}-[0-9]{2}-[0-9]{2}/)
+        # If the replaced text starts with a date, it will replace the existing
+        # date, too.
+        prepdate = ''
+
+    # Temporarily remove any existing priority and prepended date, perform the
+    # change (replace/prepend) and re-insert the existing priority and prepended
+    # date again.
+
+    input = input.replace(new RegExp("^#{priority}#{prepdate}"), '')
+    newtodo = todo.replace(/.*/, "#{priority}#{prepdate}#{input}#{backref}")
+
+    todofile = filesystem.load(env.TODO_FILE)?.split('\n')
+    if (todofile?)
+        todofile[parseInt(item) - 1] = newtodo
+        filesystem.save(env.TODO_FILE, todofile.join('\n').replace(/\n$/, ''))
+
+    if env.TODOTXT_VERBOSE > 0
+        switch action
+            when 'replace'
+                ui.echo "#{item} #{todo}"
+                ui.echo "TODO: Replaced task with:"
+                ui.echo "#{item} #{newtodo}"
+            when 'prepend'
+                ui.echo "#{item} #{newtodo}"
 
 
 # This method roughly emulates how Bash would process todo.cfg: ignore
@@ -854,6 +896,11 @@ root.run = (argv) ->
                pri = 'A-Z'
 
             _list(env.TODO_FILE, argv, new RegExp('^ *[0-9]\+ \\([' + pri + ']\\) ', 'i'))
+
+        when 'replace'
+            env.errmsg = "usage: #{env.TODO_SH} replace ITEM# \"UPDATED ITEM\""
+            replaceOrPrepend('replace', argv)
+
         else
             usage()
 
