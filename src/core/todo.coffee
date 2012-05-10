@@ -1,5 +1,5 @@
 root = exports ? this
-oneline_usage = env = filesystem = ui = echo = {}
+oneline_usage = env = filesystem = ui = echo = exit = db = {}
 
 # from http://coffeescriptcookbook.com/chapters/arrays/removing-duplicate-elements-from-arrays
 Array::unique = ->
@@ -106,12 +106,14 @@ version = ->
     exit 1
 
 
-root.init = (_env, _filesystem, _ui) ->
+root.init = (_env, _filesystem, _ui, _system) ->
     env = _env
     filesystem = _filesystem
     ui = _ui
     echo = ui.echo
     read = ui.ask
+    db = _system.db
+    exit = _system.exit
     oneline_usage = "#{env.TODO_SH} [-fhpantvV] [-d todo_config] action [task_number] [task_description]"
 
 
@@ -735,14 +737,14 @@ root.run = (argv) ->
 
         items = file.split('\n')
         nonemptyItems = []
-        db 'numtask', 'numtask:' + numTask
+        db 'numtask:' + numTask, 'numtask'
         for item, i in items
             if  item.match /[\x21-\x7E]/
                 num = i + 1
                 if  numTask && numTask < num
                     num = 0
                 nonemptyItems.push zeroFill(num, padding) + ' ' + items[i]
-                db 'test', i
+                db i, 'test'
 
         filters = filtercommand '', post_filter_command, terms
 
