@@ -1,11 +1,37 @@
 root = exports ? this
 oneline_usage = env = filesystem = ui = echo = exit = db = {}
 
+# Regular todo.txt items should not start with whitespace,
+# much less a regular alternation of tabs and spaces.
+TODO_PLACEHOLDER = '\t \t \t \t TODO PLACEHOLDER'
+
+
+# returns all lines that pass regexp's in filters[]
+applyFilters = (filters, lines) ->
+    # returns true if all regexp filters test true for line
+    passesAll = (filters, str) ->
+        for filter in filters
+            if filters.length > 0  and false
+                console.log '\n\npassesAll()'
+                console.log str, filter
+                console.log filter.test str
+            if not filter.test str then return false
+        return true
+    if filters.length > 0  and false
+        console.log 'lines:', lines
+    return (line for line in lines when passesAll filters, line)
+
+
 # from http://coffeescriptcookbook.com/chapters/arrays/removing-duplicate-elements-from-arrays
 Array::unique = ->
   output = {}
   output[@[key]] = @[key] for key in [0...@length]
   (value for key, value of output)
+
+
+# expands a "$name" to the value set in the environment (env[name])
+expand = (str) ->
+    return str?.replace /\$[a-zA-Z_][a-zA-Z0-9_]*/g, (s) -> env[s[1..]] ? ''
 
 
 formattedDate = ->
@@ -16,6 +42,20 @@ formattedDate = ->
     result = "#{date.getFullYear()}-" +
              "#{zeroFill(date.getMonth() + 1, 2)}-" +
              "#{zeroFill(date.getDate(), 2)}"
+
+
+loadSourceVarOrTodoFile = () ->
+    if env.TODOTXT_SOURCEVAR?
+        filenames = env.TODOTXT_SOURCEVAR.replace /[(")]/g, ''
+        filenames = filenames.split(' ') ? [filenames]
+        filenames = (expand filename for filename in filenames)
+    else
+        filenames = [env.TODO_FILE]
+
+    content = ''
+    for filename in filenames
+        content += (filesystem.load(filename).trim() ? '')
+    return content
 
 
 regexpEscape = (str) ->
@@ -37,7 +77,9 @@ loadTodoFile = (filename = env.TODO_FILE) ->
     todos = filesystem.load filename
     if not todos? then return null
 
-    todos = ('TODO #0 PLACEHOLDER\n' + todos).split '\n'
+    todos = "#{TODO_PLACEHOLDER}\n#{todos}".split '\n'
+
+    # Last todo item is empty and extraneous due to splitting on newlines.
     todos.length--
     return todos
 
@@ -55,41 +97,29 @@ saveTodoFile = (todoItems, filename = env.TODO_FILE) ->
 # #comments and process export commands. I know it is not perfect, but
 # it should work satisfactorily for "well-formed" config files.
 processConfig = (todoFileContents) ->
-
-    processTodoCfgLine = (line) ->
+    for line in todoFileContents.split('\n')
         # ignore #comments
         line = line.replace /#.*/, ''
 
-        # todo.txt-cli tests touch a file to confirm config file run
-        touchFile = line.match /touch\s+(.*)/
-        if touchFile
-            filesystem.save touchFile[1].trim(), ''
+        # SHIM: test-lib.sh touch a file to confirm config file run
+        if touchFile = line.match(/touch\s+(.*)/)?[1].trim()
+            filesystem.save touchFile, ''
 
-        exportArgs = line.match /export\s+(.*)=(.*)/
-        if  exportArgs
-            name = exportArgs[1]
-            value = exportArgs[2]
+        if exportArgs = line.match /export\s+(.*)=(.*)/
+            [name, value] = exportArgs[1..3]
 
             # Emulate Bash `dirname "$0"`
             # Get the current path sans filename
-            path = env.PWD
-            path = path.match(/^(.*)[\\\/].*?$/)[1]
-
+            path = env.PWD?.match(/^(.*)[\\\/].*?$/)[1]
             value = value.replace /`\s*dirname\s+['"]\$0['"]\s*`/, path
 
-            # Strip (single) quotes from beginning and end
+            # Strip single/double quotes from beginning and end
             value = value.match(/^["']*(.*?)["']*$/)[1]
 
             # Substitute $environment_variables
-            variables = value.match /\$[a-zA-Z_][a-zA-Z0-9_]*/g
+            value = expand value
 
-            if  variables
-                for variable in variables
-                    re = new RegExp('\\' + variable, 'g')
-                    value = value.replace re, env[variable.slice(1)] || ''
             env[name] = value
-
-    processTodoCfgLine line for line in todoFileContents.split('\n')
 
 
 version = ->
@@ -392,12 +422,11 @@ getTodo = (item, todoFile = env.TODO_FILE) ->
     # Precondition:  env.errmsg contains usage message.
     # Postcondition: returns task text.
     if not item then die env.errmsg
-    if item.match /[^0-9]/ then die env.errmsg
+    if /[^0-9]/.test item then die env.errmsg
 
     todo = loadTodoFile(todoFile)?[parseInt item]
 
     if not todo
-        #  console.log todoFile, loadTodoFile(todoFile)
         die "#{getPrefix(todoFile)}: No task #{item}."
 
     return todo
@@ -429,7 +458,7 @@ replaceOrPrepend = (action, argv) ->
     priority = matches?[1] ? ''
     prepdate = matches?[2] ? ''
 
-    if prepdate and action is "replace" and input.match /^[0-9]{2,4}-[0-9]{2}-[0-9]{2}/
+    if prepdate and action is "replace" and /^[0-9]{2,4}-[0-9]{2}-[0-9]{2}/.test input
         # If the replaced text starts with a date, it will replace the existing
         # date, too.
         prepdate = ''
@@ -438,7 +467,6 @@ replaceOrPrepend = (action, argv) ->
     # change (replace/prepend) and re-insert the existing priority and prepended
     # date again.
 
-    #!! too many lines for one line
     newtodo = todo.replace(new RegExp("^#{regexpEscape(priority)}#{prepdate}"), '')
                   .replace(/.*/, "#{priority}#{prepdate}#{input}#{backref}")
 
@@ -634,14 +662,10 @@ root.run = (argv) ->
 
     if not action then usage()
 
-    #!! too verbose
     # Create files if they don't exist yet.
-    if not filesystem.load(env.TODO_FILE)?
-        filesystem.save env.TODO_FILE, ''
-    if not filesystem.load(env.DONE_FILE)?
-        filesystem.save env.DONE_FILE, ''
-    if not filesystem.load(env.REPORT_FILE)?
-        filesystem.save env.REPORT_FILE, ''
+    if not filesystem.load(env.TODO_FILE)? then filesystem.save env.TODO_FILE, ''
+    if not filesystem.load(env.DONE_FILE)? then filesystem.save env.DONE_FILE, ''
+    if not filesystem.load(env.REPORT_FILE)? then filesystem.save env.REPORT_FILE, ''
 
     if env.TODOTXT_PLAIN
         for clr of env when clr.match /^PRI_/
@@ -659,7 +683,6 @@ root.run = (argv) ->
         result = filesystem.append file, input
 
         if env.TODOTXT_VERBOSE > 0
-        #!! different sources for file length
             tasknum = result.split('\n').length - 1
             echo "#{tasknum} #{input}"
             echo "#{getPrefix(file)}: #{tasknum} added."
@@ -669,7 +692,7 @@ root.run = (argv) ->
         str.replace /[-\{}()+?,\\^$|#\s]/g, '\\$&'
 
 
-    filtercommand = (filter, post_filter, search_terms) ->
+    filtercommand = (pre_filter, post_filter, search_terms) ->
         filters = []
 
         for search_term in search_terms
@@ -709,56 +732,46 @@ root.run = (argv) ->
             die "TODO: File #{file} does not exist."
 
         ## Get our search arguments, if any
-
-        #!! argument types
-        _format filesystem.load(src), null, searchTerms, postFilterRegexp
+        _format loadTodoFile(src), null, searchTerms, postFilterRegexp
 
         if env.TODOTXT_VERBOSE > 0
             echo "--"
             echo "#{getPrefix(src)}: #{env.numTasks} of #{env.totalTasks} tasks shown"
 
 
-    getPadding = (file) ->
+    getPadding = (items) ->
         ## We need one level of padding for each power of 10 $LINES uses.
-        lines = String(file.split('\n').length - 1)
+        lines = String(items.length - 1)
         return lines.length
 
-    #!! different arguments types; extra arguments
-    _format = (file, padding, terms, post_filter_command, silent, numTask) ->
-        # Parameters:    file: todo input file
+
+    _format = (items, padding, terms, postFilterRegexp) ->
+        # Parameters:    items: todo items in padded array format
         #                padding: ITEM# number width; if empty auto-detects from $1 / $TODO_FILE.
         # Precondition:  None
         # Postcondition: env.numTasks and env.totalTasks contain statistics (unless env.TODOTXT_VERBOSE=0).
 
         ## Figure out how much padding we need to use, unless this was passed to us.
-        padding ?= getPadding file
+        padding ?= getPadding items
 
-
-
-        items = file.split('\n')
+        items = items[1..]  # strip first PLACE_HOLDER
         nonemptyItems = []
-        db 'numtask:' + numTask, 'numtask'
-        for item, i in items
-            if  item.match /[\x21-\x7E]/
-                num = i + 1
-                if  numTask && numTask < num
-                    num = 0
-                nonemptyItems.push zeroFill(num, padding) + ' ' + items[i]
-                db i, 'test'
 
-        filters = filtercommand '', post_filter_command, terms
+        for item, i in items when /[\x21-\x7E]/.test item
+            if item is TODO_PLACEHOLDER
+                # placeholder indicates starting listing of env.DONE_FILE
+                # number remaining items with zeros
+                stopNumbering = true
+            else
+                if stopNumbering? then num = 0 else num = i + 1
+                nonemptyItems.push "#{zeroFill(num, padding)} #{item}"
+
+        filters = filtercommand '', postFilterRegexp, terms
 
         filteredItems = []
 
         if filters.length
-            for item in nonemptyItems
-                eligible = true
-                for filter in filters
-                    if not item.match filter
-                        eligible = false
-                        break
-                if eligible
-                    filteredItems.push item
+            filteredItems = applyFilters filters, nonemptyItems
         else
             filteredItems = nonemptyItems
 
@@ -774,11 +787,10 @@ root.run = (argv) ->
             return color
 
         for item, i in filteredItems
-            if (item.match(/^[0-9]+ x/))     # TODO: FIX REGEX
+            if /^[0-9]+ x/.test item
                 item = highlight('COLOR_DONE') + item + highlight('DEFAULT')
-            match = item.match(/^[0-9]+ \(([A-Z])\)/i)
-            if match
-                item = highlight('PRI_' + match[1]) + item + highlight('DEFAULT')
+            if level = item.match(/^[0-9]+ \(([A-Z])\)/i)?[1]
+                item = highlight('PRI_' + level) + item + highlight('DEFAULT')
             filteredItems[i] = item
 
         for item, i in filteredItems
@@ -789,9 +801,7 @@ root.run = (argv) ->
 
             filteredItems[i] = item
 
-        #!! extra param
-        if  not silent
-            echo item  for item in filteredItems
+        echo item  for item in filteredItems
 
         if env.TODOTXT_VERBOSE > 0
             env.numTasks = filteredItems.length
@@ -801,7 +811,6 @@ root.run = (argv) ->
             echo 'TODO DEBUG: Filters used were:'
             echo filters
 
-        #!! right orphan return
         return filteredItems.length
 
     # == HANDLE ACTION ==
@@ -837,7 +846,6 @@ root.run = (argv) ->
                 die "TODO: Destination file #{dest} does not exist."
 
         when 'del', 'rm'
-            # 1 console.log ' env.TODOTXT_PRESERVE_LINE_NUMBERS',  env.TODOTXT_PRESERVE_LINE_NUMBERS
             # replace deleted line with a blank line when TODOTXT_PRESERVE_LINE_NUMBERS is 1
             env.errmsg = "usage: #{env.TODO_SH} del ITEM# [TERM]"
             item = argv[1]
@@ -884,18 +892,24 @@ root.run = (argv) ->
             total = (loadTodoFile()?.length - 1) ? 0
             padding = String(total).length
 
-            todoContents = filesystem.load env.TODO_FILE
-            doneContents = filesystem.load env.DONE_FILE
-            combined_files = todoContents + doneContents
+            todoItems = loadTodoFile env.TODO_FILE
+            doneItems = loadTodoFile env.DONE_FILE
+            allItems = todoItems.concat doneItems
 
-            saved_todo_text_verbose = env.TODOTXT_VERBOSE
-            env.TODOTXT_VERBOSE = 0
-            tasknum = _format todoContents, padding, argv, null, true
-            _format combined_files, padding, argv, null, false, tasknum
-            if saved_todo_text_verbose > 0
-                tdone = filesystem.load(env.DONE_FILE).split('\n').length - 1
-                tasknum = _format(todoContents, padding, argv, null, true)
-                donenum = _format(doneContents, padding, argv, null, true)
+            _format allItems, padding, argv
+
+            if env.TODOTXT_VERBOSE > 0
+                tdone = todoItems.length - 1
+                [donenum, tasknum] = do (env, echo) ->
+                    # temporarily suppress output
+                    env.TODOTXT_VERBOSE = 0
+                    echo = () -> return
+
+                    tasknum = _format todoItems, padding, argv
+                    donenum = _format doneItems, padding, argv
+                    return [tasknum, donenum]
+
+                # output is restored, again
                 echo "--"
                 echo "#{getPrefix(env.TODO_FILE)}: #{tasknum} of #{total} tasks shown"
                 echo "#{getPrefix(env.DONE_FILE)}: #{donenum} of #{tdone} tasks shown"
@@ -906,58 +920,30 @@ root.run = (argv) ->
             if not argv[0]?
                 # nothing
             else
-                file = argv.shift() # Was filename; next $1 is first search term
+                file = argv.shift() ## Was filename; next $1 is first search term
 
                 _list file, argv
 
         when 'listcon', 'lsc'
-            #!! file location vs contents
-            file = filesystem.load(env.TODO_FILE)
-            #!! messy emulation for test cases
-            if filenames = env.TODOTXT_SOURCEVAR?.split(' ')
-                file = ''
-                for filename in filenames
-                    filename = filename.replace /[(")]/g, ''
-                    if filename is '$DONE_FILE'
-                        filename = env.DONE_FILE
-                    if filename is '$TODO_FILE'
-                        filename = env.TODO_FILE
+            file = loadSourceVarOrTodoFile()
 
-                    file += filesystem.load(filename.trim()) ? ''
-
-            contexts = file.match /(^|\s)@[\x21-\x7E]+/g
-
-            if contexts
+            if contexts = file.match /(^|\s)@[\x21-\x7E]+/g
                 contexts = (context.trim() for context in contexts)
-                contexts.sort()
-
-                contexts = contexts.unique()
-
-                echo context for context in contexts
+                echo context for context in contexts.sort().unique()
 
         when 'listproj', 'lsprj'
-            file = filesystem.load env.TODO_FILE
+            file = loadSourceVarOrTodoFile()
+            argv.shift()
+            filters = filtercommand '', '', argv
+            file = applyFilters(filters, file.split('\n')).join('\n')
 
-            projects = file.match /(^|\s)\+[\x21-\x7E]+/g
-
-            if projects
+            if projects = file.match /(^|\s)\+[\x21-\x7E]+/g
                 projects = (project.trim() for project in projects)
-                projects.sort()
-
-                projects = projects.unique()
-
-                echo project for project in projects
+                echo project for project in projects.sort().unique()
 
         when 'listpri', 'lsp'
-            argv.shift() # was "listpri", new $1 is priority to list or first TERM
-
-            pri = argv[0]?.toUpperCase().match /^(([A-Z]\-[A-Z])|([A-Z]))$/
-            if (pri)
-                pri = pri[0]
-                argv.shift()
-            else
-               pri = 'A-Z'
-
+            argv.shift() ## was "listpri", new $1 is priority to list or first TERM
+            if pri = argv[0]?.toUpperCase().match /^(([A-Z]\-[A-Z])|([A-Z]))$/ then pri = pri[0]; argv.shift() else pri = 'A-Z'
             _list env.TODO_FILE, argv, new RegExp('^ *[0-9]\+ \\([' + pri + ']\\) ')
 
         when 'prepend', 'prep'
@@ -972,12 +958,12 @@ root.run = (argv) ->
                          "note: PRIORITY must be anywhere from A to Z."
 
             if argv.length isnt 3 then die env.errmsg
-            if not newpri.match /^[A-Z]/ then die env.errmsg
+            if not /^[A-Z]/.test newpri then die env.errmsg
 
             todo = getTodo item
 
             oldpri = ''
-            if todo.match /^\([A-Z]\) /
+            if /^\([A-Z]\) /.test todo
                 oldpri = todo[1]
 
             if oldpri isnt newpri
