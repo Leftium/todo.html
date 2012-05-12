@@ -93,6 +93,13 @@ saveTodoFile = (todoItems, filename = env.TODO_FILE) ->
     filesystem.save filename, todoItems
 
 
+appendTodoFile = (appendItems, filename) ->
+    if not appendItems? then return
+    if not todos = loadTodoFile filename then return
+    todos = todos.concat appendItems
+    return saveTodoFile todos, filename
+
+
 # This method roughly emulates how Bash would process todo.cfg: ignore
 # #comments and process export commands. I know it is not perfect, but
 # it should work satisfactorily for "well-formed" config files.
@@ -845,6 +852,18 @@ root.run = (argv) ->
             else
                 die "TODO: Destination file #{dest} does not exist."
 
+        when 'archive'
+            if todos = loadTodoFile()
+                # defragment blank lines
+                todos = (item for item in todos when /[\x21-\x7E]/.test item)
+                dones = (item for item in todos when /^x /.test item)
+
+                if env.TODOTXT_VERBOSE > 0 then echo item for item in dones
+
+                appendTodoFile dones, env.DONE_FILE
+                saveTodoFile (item for item in todos when not /^x /.test item)
+                echo "TODO: #{env.TODO_FILE} archived."
+
         when 'del', 'rm'
             # replace deleted line with a blank line when TODOTXT_PRESERVE_LINE_NUMBERS is 1
             env.errmsg = "usage: #{env.TODO_SH} del ITEM# [TERM]"
@@ -876,6 +895,36 @@ root.run = (argv) ->
                 else
                     echo "TODO: No tasks were deleted."
 
+        when 'do'
+            env.errmsg = "usage: #{env.TODO_SH} do ITEM#[, ITEM#, ITEM#, ...]"
+
+            # shift so we get arguments to the do request
+            argv.shift()
+            if argv.length is 0 then die env.errmsg
+
+            todos = loadTodoFile()
+
+            # Split multiple space/comma separated do's into single comma separated list
+            # Loop the 'do' function for each item
+            for item in argv.join(',').split(',')
+                todo = getTodo item
+                # Check if this item has already been done
+                if todo?[0..1] != 'x '
+                    now = formattedDate()
+                    # remove priority once item is done
+                    item = parseInt item, 10
+                    todos[item] = todos[item].replace(/^\(.\) /, '')
+                                             .replace /^/, "x #{now} "
+                    saveTodoFile todos
+                    if env.TODOTXT_VERBOSE > 0
+                        echo "#{item} #{todos[item]}"
+                        echo "TODO: #{item} marked as done."
+                else
+                    echo "TODO: #{item} is already marked done."
+
+            if env.TODOTXT_AUTO_ARCHIVE is 1
+                root.run ['archive']
+
         when 'help'
             help()
 
@@ -899,17 +948,17 @@ root.run = (argv) ->
             _format allItems, padding, argv
 
             if env.TODOTXT_VERBOSE > 0
-                tdone = todoItems.length - 1
-                [donenum, tasknum] = do (env, echo) ->
-                    # temporarily suppress output
-                    env.TODOTXT_VERBOSE = 0
-                    echo = () -> return
+                tdone = doneItems.length - 1
 
-                    tasknum = _format todoItems, padding, argv
-                    donenum = _format doneItems, padding, argv
-                    return [tasknum, donenum]
+                # temporarily suppress output
+                echo = () -> return
 
-                # output is restored, again
+                tasknum = _format todoItems, padding, argv
+                donenum = _format doneItems, padding, argv
+
+                # restore output
+                echo = ui.echo
+
                 echo "--"
                 echo "#{getPrefix(env.TODO_FILE)}: #{tasknum} of #{total} tasks shown"
                 echo "#{getPrefix(env.DONE_FILE)}: #{donenum} of #{tdone} tasks shown"

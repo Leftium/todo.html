@@ -6,6 +6,9 @@
 # These are tests not supported by todo.html core:
 SKIP_TESTS='t0002 t1020.[67] t6??? t1300.[23] t1300.1[89]'
 
+# These tests are WIP:
+SKIP_TESTS="t1[6789]?? t[2689]??? $SKIP_TESTS"
+
 # if --tee was passed, write the output not only to the terminal, but
 # additionally to the file test-results/$BASENAME.out, too.
 case "$TEST_TEE_STARTED, $* " in
