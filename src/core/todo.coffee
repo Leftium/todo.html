@@ -786,7 +786,7 @@ root.run = (argv) ->
             k = padding + 1
             a = a[k..].toUpperCase()
             b = b[k..].toUpperCase()
-            return if a < b then -1 else 1)
+            return if a <= b then -1 else 1)
 
         highlight = (colorVar) ->
             color = env[colorVar.toUpperCase()] ? env.PRI_X
@@ -884,7 +884,7 @@ root.run = (argv) ->
         when 'archive'
             if todos = loadTodoFile()
                 # defragment blank lines
-                todos = (item for item in todos when /[\x21-\x7E]/.test item)
+                todos = (item for item in todos when item isnt '')
                 dones = (item for item in todos when /^x /.test item)
 
                 if env.TODOTXT_VERBOSE > 0 then echo item for item in dones
