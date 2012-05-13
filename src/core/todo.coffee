@@ -852,6 +852,35 @@ root.run = (argv) ->
             else
                 die "TODO: Destination file #{dest} does not exist."
 
+
+        when 'append', 'app'
+            env.errmsg = "usage: #{env.TODO_SH} append ITEM# \"TEXT TO APPEND\""
+            argv.shift(); item = argv.shift()
+            todo = getTodo item
+
+            if not argv[0] and env.TODOTXT_FORCE is 0
+                input = read 'Append: '
+            else
+                input = argv.join ' '
+
+            if env.SENTENCE_DELIMITERS.indexOf(input[0]) isnt -1
+                appendspace = ''
+            else
+                appendspace = ' '
+
+            input = cleaninput input
+
+            newtodo = todo.replace /^.*/, "$&#{appendspace}#{input}"
+
+            if todos = loadTodoFile env.TODO_FILE
+                todos[parseInt item, 10] = newtodo
+
+                if saveTodoFile todos, env.TODO_FILE
+                    if env.TODOTXT_VERBOSE > 0
+                        echo "#{item} #{newtodo}"
+                else
+                    die "TODO: Error appending task #{item}."
+
         when 'archive'
             if todos = loadTodoFile()
                 # defragment blank lines
