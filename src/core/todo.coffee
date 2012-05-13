@@ -924,6 +924,28 @@ root.run = (argv) ->
                 else
                     echo "TODO: No tasks were deleted."
 
+
+        when 'depri', 'dp'
+            env.errmsg = "usage: #{env.TODO_SH} depri ITEM#[, ITEM#, ITEM#, ...]"
+            argv.shift()
+            if argv.length is 0 then die env.errmsg
+
+            # Split multiple space/comma separated do's into single comma separated list
+            # Loop the 'depri' function for each item
+            for item in argv.join(',').split(',')
+                todo = getTodo item
+
+                newtodo = todo.replace /^\(.\) /, ''
+                if newtodo isnt todo
+                    todos = loadTodoFile env.TODO_FILE
+                    todos[parseInt item, 10] = newtodo
+                    saveTodoFile todos, env.TODO_FILE
+                    if env.TODOTXT_VERBOSE > 0
+                        echo "#{item} #{newtodo}"
+                        echo "TODO: #{item} deprioritized."
+                else
+                    echo "TODO: #{item} is not prioritized."
+
         when 'do'
             env.errmsg = "usage: #{env.TODO_SH} do ITEM#[, ITEM#, ITEM#, ...]"
 
