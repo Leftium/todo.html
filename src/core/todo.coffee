@@ -4,6 +4,7 @@ oneline_usage = env = filesystem = ui = echo = exit = db = read = {}
 # Regular todo.txt items should not start with whitespace,
 # much less a regular alternation of tabs and spaces.
 TODO_PLACEHOLDER = '\t \t \t \t TODO PLACEHOLDER'
+DUPE_PLACEHOLDER = '\t \t \t \t DUPE PLACEHOLDER'
 
 
 # returns all lines that pass regexp's in filters[]
@@ -910,9 +911,8 @@ root.run = (argv) ->
                     todos = loadTodoFile()
                     todos[item] = ''
 
-                    if item is (todos.length - 1)
-                        while todos[todos.length - 1] is ''
-                            todos.length--
+                    while todos[todos.length - 1] is ''
+                        todos.length--
 
                     if env.TODOTXT_PRESERVE_LINE_NUMBERS is 0
                         # delete line (changes line numbers)
@@ -1108,6 +1108,29 @@ root.run = (argv) ->
             env.errmsg = "usage: #{env.TODO_SH} replace ITEM# \"UPDATED ITEM\""
             replaceOrPrepend 'replace', argv
 
+        when 'deduplicate'
+            todos = loadTodoFile()
+
+            originalTaskNum = (t for t in todos when t isnt '').length - 1
+            for item, i in todos
+                for dupe, d in todos when item is dupe and d > i
+                    todos[d] = DUPE_PLACEHOLDER
+
+            if env.TODOTXT_PRESERVE_LINE_NUMBERS is 0
+                todos = (t for t in todos when t isnt DUPE_PLACEHOLDER)
+            else
+                for todo,i in todos when todo is DUPE_PLACEHOLDER
+                    todos[i] = ''
+                while todos[todos.length - 1] is ''
+                    todos.length--
+
+            newTaskNum = (t for t in todos when t isnt '').length - 1
+            deduplicateNum = originalTaskNum - newTaskNum
+            if deduplicateNum is 0
+                echo "TODO: No duplicate tasks found"
+            else
+                echo "TODO: #{deduplicateNum} duplicate task(s) removed"
+                saveTodoFile todos
         else
             usage()
 
