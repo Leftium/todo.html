@@ -1,5 +1,5 @@
 root = exports ? this
-oneline_usage = env = filesystem = ui = echo = exit = db = {}
+oneline_usage = env = filesystem = ui = echo = exit = db = read = {}
 
 # Regular todo.txt items should not start with whitespace,
 # much less a regular alternation of tabs and spaces.
@@ -655,7 +655,7 @@ root.run = (argv) ->
         env.TODOTXT_AUTO_ARCHIVE = env.OVR_TODOTXT_AUTO_ARCHIVE
     if env.OVR_TODOTXT_FORCE?
         env.TODOTXT_FORCE = env.OVR_TODOTXT_FORCE
-    if env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS
+    if env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS?
         env.TODOTXT_PRESERVE_LINE_NUMBERS = env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS
     if env.OVR_TODOTXT_PLAIN?
         env.TODOTXT_PLAIN = env.OVR_TODOTXT_PLAIN
@@ -898,6 +898,7 @@ root.run = (argv) ->
             env.errmsg = "usage: #{env.TODO_SH} del ITEM# [TERM]"
             item = argv[1]
             todo = getTodo item
+            item = parseInt item, 10
 
             if not argv[2]
                 if env.TODOTXT_FORCE is 0
@@ -907,14 +908,15 @@ root.run = (argv) ->
                 if answer is 'y'
 
                     todos = loadTodoFile()
-                    item = parseInt item
-                    if env.TODOTXT_PRESERVE_LINE_NUMBERS is 0 or
-                       item is todos.length - 1
+                    todos[item] = ''
+
+                    if item is (todos.length - 1)
+                        while todos[todos.length - 1] is ''
+                            todos.length--
+
+                    if env.TODOTXT_PRESERVE_LINE_NUMBERS is 0
                         # delete line (changes line numbers)
-                        todos.splice item, 1
-                    else
-                        # leave blank line behind (preserves line numbers)
-                        todos[item] = ' '
+                        todos = (t for t in todos when t isnt '')
 
                     saveTodoFile todos
 
@@ -923,7 +925,24 @@ root.run = (argv) ->
                         echo "TODO: #{item} deleted."
                 else
                     echo "TODO: No tasks were deleted."
-
+            else
+                $3 = argv[2]
+                newtodo = todo.replace(new RegExp("^(\(.\) ){0,1} *#{$3} *", 'g'), '$1')
+                              .replace(new RegExp(" *#{$3} *$", 'g'), '')
+                              .replace(new RegExp("  *#{$3} *", 'g'), ' ')
+                              .replace(new RegExp(" *#{$3}  *", 'g'), ' ')
+                              .replace(new RegExp("#{$3}", 'g'), '')
+                if todo is newtodo
+                      if env.TODOTXT_VERBOSE > 0 then echo "#{item} #{todo}"
+                      die "TODO: '#{$3}' not found; no removal done."
+                else
+                    todos = loadTodoFile env.TODO_FILE
+                    todos[item] = newtodo
+                    saveTodoFile todos, env.TODO_FILE
+                if env.TODOTXT_VERBOSE > 0
+                    echo "#{item} #{todo}"
+                    echo "TODO: Removed '#{$3}' from task."
+                    echo "#{item} #{newtodo}"
 
         when 'depri', 'dp'
             env.errmsg = "usage: #{env.TODO_SH} depri ITEM#[, ITEM#, ITEM#, ...]"
