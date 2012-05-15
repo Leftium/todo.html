@@ -697,10 +697,13 @@ root.run = (argv) ->
         if env.TODOTXT_DATE_ON_ADD
             now = formattedDate()
             input = input.replace /^(\([A-Z]\) ){0,1}/i, "$1#{now} "
-        result = filesystem.append file, input
+        todos = loadTodoFile file
+        todos.push input
+
+        saveTodoFile todos, file
 
         if env.TODOTXT_VERBOSE > 0
-            tasknum = result.split('\n').length - 1
+            tasknum = todos.length - 1
             echo "#{tasknum} #{input}"
             echo "#{getPrefix(file)}: #{tasknum} added."
 
