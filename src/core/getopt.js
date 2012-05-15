@@ -8,11 +8,15 @@
 //  options are not supported.
 //
 
-opterr = 1;                          // print error message
-optind = 0;                          // index into parent argv array
-optopt = "";                         // character checked for validity
-optreset = 0;                        // reset getopt
-optarg = "";                         // option argument
+resetopt = function() {
+    opterr = 1;                          // print error message
+    optind = 0;                          // index into parent argv array
+    optopt = "";                         // character checked for validity
+    optreset = 0;                        // reset getopt
+    optarg = "";                         // option argument
+}
+
+resetopt();
 
 getopt = function(nargv, ostr)
 {

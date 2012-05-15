@@ -35,14 +35,21 @@ expand = (str) ->
     return str?.replace /\$[a-zA-Z_][a-zA-Z0-9_]*/g, (s) -> env[s[1..]] ? ''
 
 
-formattedDate = ->
+formattedDate = (attachTime)->
     date = new Date()
     if env.TODO_TEST_TIME
         date = new Date(env.TODO_TEST_TIME * 1000)
 
-    result = "#{date.getFullYear()}-" +
+    result = "#{date.getFullYear()              }-" +
              "#{zeroFill(date.getMonth() + 1, 2)}-" +
-             "#{zeroFill(date.getDate(), 2)}"
+             "#{zeroFill(date.getDate(),      2)}"
+
+    if attachTime?
+        result += "T#{zeroFill(date.getHours(),   2)}" +
+                  ":#{zeroFill(date.getMinutes(), 2)}" +
+                  ":#{zeroFill(date.getSeconds(), 2)}"
+    return result
+
 
 
 loadSourceVarOrTodoFile = () ->
@@ -81,7 +88,8 @@ loadTodoFile = (filename = env.TODO_FILE) ->
     todos = "#{TODO_PLACEHOLDER}\n#{todos}".split '\n'
 
     # Last todo item is empty and extraneous due to splitting on newlines.
-    todos.length--
+    while todos[todos.length - 1] is ''
+        todos.length--
     return todos
 
 
@@ -502,6 +510,7 @@ root.run = (argv) ->
     env.OVR_TODOTXT_DEFAULT_ACTION = env.TODOTXT_DEFAULT_ACTION
 
     # == PROCESS OPTIONS ==
+    resetopt()
     while (option = getopt(argv, ':fhpcnNaAtTvVx+@Pd:')) isnt ''
         switch option
             when '@'
@@ -1107,6 +1116,29 @@ root.run = (argv) ->
         when 'replace'
             env.errmsg = "usage: #{env.TODO_SH} replace ITEM# \"UPDATED ITEM\""
             replaceOrPrepend 'replace', argv
+
+        when 'report'
+            # archive first
+            root.run ['archive']
+
+            total = (loadTodoFile()?.length - 1) ? 0
+            tdone = (loadTodoFile(env.DONE_FILE)?.length - 1) ? 0
+
+            newdata = "#{total} #{tdone}"
+            lastreport = filesystem?.load(env.REPORT_FILE)
+                                   ?.trim()
+                                   ?.split('\n')
+                                   ?.pop()
+            lastdata = lastreport.replace /^[^ ]+ /, ''
+
+            if lastdata is newdata
+                echo lastreport
+                if env.TODOTXT_VERBOSE > 0 then echo "TODO: Report file is up-to-date."
+            else
+                newreport = "#{formattedDate(true)} #{newdata}"
+                filesystem.append env.REPORT_FILE, newreport
+                echo "#{newreport}"
+                if env.TODOTXT_VERBOSE > 0 then echo "TODO: Report file updated."
 
         when 'deduplicate'
             todos = loadTodoFile()
