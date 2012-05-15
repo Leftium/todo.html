@@ -417,8 +417,8 @@ cleaninput = (input) ->
     # Postcondition: returns modified input.
 
     # Replace CR and LF with space; tasks always comprise a single line.
-    input = input.replace /\r/, ' '
-    input = input.replace /\n/, ' '
+    input = input.replace /\r/g, ' '
+    input = input.replace /\n/g, ' '
 
     return input
 
@@ -848,6 +848,18 @@ root.run = (argv) ->
                 argv.shift()
                 input = argv.join ' '
             _addto env.TODO_FILE, input
+
+        when 'addm'
+            if not argv[1] and env.TODOTXT_FORCE is 0
+                input = read 'Add: '
+            else
+                if not argv[1] then die "usage: #{env.TODO_SH} addm \"TODO ITEM\""
+                argv.shift()
+                input = argv.join ' '
+
+            # Treat each line separately
+            for line in input.split '\n'
+                _addto env.TODO_FILE, line
 
         when 'addto'
             if not argv[1] then die "usage: #{env.TODO_SH} addto DEST \"TODO ITEM\""
