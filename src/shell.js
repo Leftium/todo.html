@@ -255,6 +255,55 @@ $(function() {
     }
 
     function doCommand(command) {
+        // Get the current path sans filename
+        var path = $.twFile.convertUriToLocalPath(location.href);
+        path = path.match(/^(.*)[\\\/].*?$/)[1];
+        console.log(path)
+
+        var env = {
+            PWD: path,
+            HOME: 'C:/Users/Leftium'
+        };
+        var filesystem = {
+            load: function(fname) {
+                fname = normalizedFilepath(fname);
+                var result = $.twFile.load(fname);
+                return result;
+            },
+            save: function(fname, content) {
+                return $.twFile.save(fname, content);
+            },
+
+            append: function(filePath, appendContent) {
+                var content;
+                content = this.load(filePath);
+                if (content != null) {
+                    content += appendContent + '\n';
+                    if (this.save(filePath, content)) {
+                        return content;
+                    }
+                }
+            }
+
+
+        }
+        var ui = {
+            echo: function(text) {
+                printLn(text);
+            }
+        }
+        var system = {
+            db: function() {},
+            exit: function() {}
+        }
+        var argv = command.split(' ');
+
+        init(env, filesystem, ui, system);
+        run(argv);
+        return '';
+    }
+
+    function _doCommand(command) {
         var result = '';
         var match  = command.match(/^\s*([^\s]+)\s*(.*)/)
         var action = '';
