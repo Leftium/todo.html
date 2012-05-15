@@ -126,7 +126,8 @@ processConfig = (todoFileContents) ->
 
             # Emulate Bash `dirname "$0"`
             # Get the current path sans filename
-            path = env.PWD?.match(/^(.*)[\\\/].*?$/)[1]
+            path = env.PWD
+
             value = value.replace /`\s*dirname\s+['"]\$0['"]\s*`/, path
 
             # Strip single/double quotes from beginning and end
