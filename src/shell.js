@@ -29,6 +29,7 @@ function normalizedFilepath(filepath) {
 
             filepath = path + filepath;
         }
+        filepath = filepath.replace(/\//g, '\\');
     }
     return filepath;
 }
@@ -245,7 +246,7 @@ $(function() {
     var $ = jQuery; // local alias
 
     var cliOutput = new CliOutput($('#cli-output'));
-    cliOutput.addText(document.title + '\n\n' +
+    cliOutput.addText(document.title + '\n' +
                            getText('usage') + '\n');
     cliOutput.setMark();
 
@@ -255,6 +256,58 @@ $(function() {
     }
 
     function doCommand(command) {
+        // Get the current path sans filename
+        var path = $.twFile.convertUriToLocalPath(location.href);
+        path = path.match(/^(.*)[\\\/].*?$/)[1];
+
+        var env = {
+            PWD: path,
+            HOME: 'C:/Users/Leftium'
+        };
+        var filesystem = {
+            load: function(fname) {
+                fname = normalizedFilepath(fname);
+                var result = $.twFile.load(fname);
+                return result;
+            },
+
+            save: function(fname, content) {
+                return $.twFile.save(fname, content);
+            },
+
+            append: function(filePath, appendContent) {
+                var content;
+                content = this.load(filePath);
+                if (content != null) {
+                    content += appendContent + '\n';
+                    if (this.save(filePath, content)) {
+                        return content;
+                    }
+                }
+            }
+
+
+        }
+        var ui = {
+            echo: function(text) {
+                printLn(text);
+            }
+        }
+        var system = {
+            db: function() {},
+            exit: function() {}
+        }
+        var argv = command.split(' ');
+
+        while (/t|todo.sh|todo/.test(argv[0]))
+            argv.shift()
+
+        init(env, filesystem, ui, system);
+        run(argv);
+        return '';
+    }
+
+    function _doCommand(command) {
         var result = '';
         var match  = command.match(/^\s*([^\s]+)\s*(.*)/)
         var action = '';
@@ -396,74 +449,12 @@ $(function() {
 
     $.twFile.initialize().then(function() {
         var driverList = $.twFile.availableDrivers();
-        printLn('\nINITIALIZED! ' + driverList.length +
+        printLn('Initialized! ' + driverList.length +
                 ' drivers available: [' + driverList + ']');
-        printLn('\nFilepath: ' + normalizedFilepath() + '\n\n');
+        printLn('This file: ' + normalizedFilepath() + '\n\n\n\n');
 
-        printLn('load self: ' + ((!!$.twFile.load(normalizedFilepath())) ? $.twFile.lastDriver.name : 'FAIL'));
-        printLn('load external: ' + ((!!$.twFile.load(normalizedFilepath('todo.css'))) ? $.twFile.lastDriver.name : 'FAIL'));
-
-        // process todo.cfg here
-        var todoCfgPath = store.get('$HOME') +'/.todo/todo.cfg';
-        todoCfgPath = normalizedFilepath(todoCfgPath);
-        printLn('Processing: ' + todoCfgPath);
-
-        var contents = $.twFile.load(todoCfgPath);
-        if (contents) {
-            printLn('\nUsing driver: ' + $.twFile.lastDriver.name);
-            printLn(processTodoCfg(contents).join('\n'));
-        }
+        // Print version info
+        doCommand('-V');
     });
 });
-
-// This method roughly emulates how Bash would process todo.cfg: ignore
-// #comments and process export commands. I know it is not perfect, but
-// it should work satisfactorily for "well-formed" config files.
-
-function processTodoCfg(todoFileContents) {
-    var results = [];
-
-    function processTodoCfgLine(line)
-    {
-        // ignore #comments
-        line = line.replace(/#.*/, '');
-
-        var exportArgs = line.match(/export\s+(.*)=(.*)/);
-        if (exportArgs) {
-            var name = exportArgs[1];
-            var value = exportArgs[2];
-
-            // Emulate Bash `dirname "$0"`
-            // Get the current path sans filename
-            var path = $.twFile.convertUriToLocalPath(location.href);
-            path = path.match(/^(.*)[\\\/].*?$/)[1];
-
-            value = value.replace(/`\s*dirname\s+['"]\$0['"]\s*`/, path);
-
-            // Strip (single) quotes from beginning and end
-            value = value.match(/^["']*(.*?)["']*$/)[1];
-
-
-            // Substitute $environment_variables
-            var variables = value.match(/\$[a-zA-Z_][a-zA-Z0-9_]*/g);
-
-            if (variables) {
-                $.each(variables, function(i, varName) {
-                    var re = new RegExp('\\' + varName, 'g');
-                    value = value.replace(re, store.get(varName) || '');
-                });
-            }
-            store.set('$' + name, value);
-            results.push(name + ' = ' + value);
-        }
-    }
-
-    var lines = todoFileContents.split('\n');
-
-    $.each(lines, function(i, v) {
-        processTodoCfgLine(v);
-    });
-
-    return results;
-}
 
