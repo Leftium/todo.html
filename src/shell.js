@@ -246,7 +246,7 @@ $(function() {
     var $ = jQuery; // local alias
 
     var cliOutput = new CliOutput($('#cli-output'));
-    cliOutput.addText(document.title + '\n\n' +
+    cliOutput.addText(document.title + '\n' +
                            getText('usage') + '\n');
     cliOutput.setMark();
 
@@ -298,6 +298,9 @@ $(function() {
             exit: function() {}
         }
         var argv = command.split(' ');
+
+        while (/t|todo.sh|todo/.test(argv[0]))
+            argv.shift()
 
         init(env, filesystem, ui, system);
         run(argv);
@@ -446,19 +449,12 @@ $(function() {
 
     $.twFile.initialize().then(function() {
         var driverList = $.twFile.availableDrivers();
-        printLn('\nINITIALIZED! ' + driverList.length +
+        printLn('Initialized! ' + driverList.length +
                 ' drivers available: [' + driverList + ']');
-        printLn('\nFilepath: ' + normalizedFilepath() + '\n\n');
+        printLn('This file: ' + normalizedFilepath() + '\n\n\n\n');
 
-        load_self = $.twFile.load(normalizedFilepath());
-        load_external = $.twFile.load(normalizedFilepath('todo.txt'));
-
-        printLn('load self: ' + (!!load_self ? $.twFile.lastDriver.name : 'FAIL'));
-        printLn('load external: ' + (!!load_external ? $.twFile.lastDriver.name : 'FAIL'));
-        printLn('save self: ' + ((!!$.twFile.save(normalizedFilepath(), load_self)) ? $.twFile.lastDriver.name : 'FAIL'));
-        printLn('save external: ' + ((!!$.twFile.save(normalizedFilepath('todo.txt'), load_external)) ? $.twFile.lastDriver.name : 'FAIL'));
-
-        printLn(load_external);
+        // Print version info
+        doCommand('-V');
     });
 });
 

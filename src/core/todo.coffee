@@ -141,9 +141,9 @@ processConfig = (todoFileContents) ->
 
 version = ->
     echo """
-        TODO.HTML Command Line Interface v#{env.VERSION}
+        TODO.HTML Command Line Interface v0.2.9.4alpha
 
-        First release: ??/??/2012
+        First release: 05/17/2012
         Developed by: John-Kim Murphy (http://Leftium.com)
         Code repository: https://github.com/leftium/todo.html
 
