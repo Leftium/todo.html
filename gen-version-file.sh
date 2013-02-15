@@ -1,38 +1,45 @@
 #!/bin/sh
 # Based on git's GIT-VERSION-GEN.
 
-VF=version.txt
-DEF_VER="vUNKNOWN ($(date +%Y-%m-%dT%T))"
+VERSION_FILE=version.txt
+DEFAULT_VERSION="vUNKNOWN ($(date +%Y-%m-%dT%T))"
 
 LF='
 '
 
 if test -d .git -o -f .git &&
-    VN=$(git describe --abbrev=4 HEAD 2>/dev/null) &&
-    case "$VN" in
+    # get latest git tag in format: "v0.2.9.5alpha-1-g05a6"
+    NEXT_VERSION=$(git describe --abbrev=4 HEAD 2>/dev/null) &&
+    case "$NEXT_VERSION" in
     *$LF*) (exit 1) ;;
     v[0-9]*)
+        # append '+' if "dirty" modified/untracked files exist
         git update-index -q --refresh
         test -z "$(git diff-index --name-only HEAD --)" ||
-        VN="$VN-dirty" ;;
+        NEXT_VERSION="$NEXT_VERSION+" ;;
     esac
 then
-    VN=$(echo "$VN" | sed -e 's/-/./g');
+    # swap first dash with space; remove second dash
+    NEXT_VERSION=$(echo "$NEXT_VERSION" | sed -e 's/-/ /' | sed -e 's/-//');
 else
-    VN="$DEF_VER"
+    # git version not available; use default
+    NEXT_VERSION="$DEFAULT_VERSION"
 fi
 
-VN=$(expr "$VN" : v*'\(.*\)')
+# strip 'v' chars from beginning
+NEXT_VERSION=$(expr "$NEXT_VERSION" : v*'\(.*\)')
 
-if test -r $VF
+# get current version from version file
+if test -r $VERSION_FILE
 then
-    VC=$(sed -e 's/^VERSION=//' <$VF)
+    CURR_VERSION=$(sed -e 's/^VERSION=//' <$VERSION_FILE)
 else
-    VC=unset
+    CURR_VERSION=unset
 fi
-test "$VN" = "$VC" || {
-    echo >&2 "VERSION=$VN"
-    echo "VERSION=$VN" >$VF
+# only modify version file if version changed
+test "$NEXT_VERSION" = "$CURR_VERSION" || {
+    # echo to screen
+    echo >&2 "$NEXT_VERSION"
+    # echo to version.txt file
+    echo "$NEXT_VERSION" >$VERSION_FILE
 }
-
-
