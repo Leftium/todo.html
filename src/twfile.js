@@ -245,6 +245,7 @@ Triple licensed under the BSD, MIT and GPL licenses:
             return null;
         },
         saveFile: function(filePath,content) {
+            filePath = filePath.replace(/\//g, '\\');
             // Returns null if it can't do it, false if there's an error, true if it saved OK
             if(window.Components) {
                 try {
