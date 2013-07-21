@@ -232,10 +232,11 @@ Tooltip.prototype.assignmentContentsChanged = function(ev) {
  */
 Tooltip.prototype._updatePosition = function() {
   var dimensions = this.getDimensionsOfAssignment();
+  var rect = util.getTextBoundingRect(this.inputter.element, dimensions.start,
+                                      dimensions.end, false);
 
-  // 10 is roughly the width of a char
   if (this.panelElement) {
-    this.panelElement.style.left = (dimensions.start * 10) + 'px';
+    this.panelElement.style.left = rect.left + 'px';
   }
 
   this.focusManager.updatePosition(dimensions);
