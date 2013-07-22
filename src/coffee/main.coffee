@@ -221,5 +221,12 @@ require ['jquery', 'coffee-script', 'nodeutil'], ($, CoffeeScript, nodeutil) ->
         " "
       ].join('\n')
 
+    # Strip todo data from DOM
+    $body = $('body')
+    bodyChildren = $('body > *')
+    $(bodyChildren).detach()
+    window.todotxt = $body.html()
+    $body.empty()
+    bodyChildren.appendTo($body)
 
     init()
