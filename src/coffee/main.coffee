@@ -3,7 +3,7 @@
 #
 # written by Larry Ng
 
-require ['jquery', 'coffee-script', 'nodeutil', 'twfile'], ($, CoffeeScript, nodeutil, twfile) ->
+require ['jquery', 'coffee-script', 'nodeutil', 'store'], ($, CoffeeScript, nodeutil, store) ->
 
   $ ->
     SAVED_CONSOLE_LOG = console.log
@@ -30,7 +30,7 @@ require ['jquery', 'coffee-script', 'nodeutil', 'twfile'], ($, CoffeeScript, nod
         colorize: true
 
       constructor: (@output, @input, @prompt, settings={}) ->
-        @history = []
+        @history = store.load().history
         @historyi = -1
         @saved = ''
         @multiline = false
@@ -84,6 +84,7 @@ require ['jquery', 'coffee-script', 'nodeutil', 'twfile'], ($, CoffeeScript, nod
 
       addToHistory: (s) =>
         @history.unshift s
+        store.save({history: @history})
         @historyi = -1
 
       addToSaved: (s) =>
@@ -220,48 +221,6 @@ require ['jquery', 'coffee-script', 'nodeutil', 'twfile'], ($, CoffeeScript, nod
         "# help() for features and tips."
         " "
       ].join('\n')
-
-    # Strip todo data from DOM
-    $body = $('body')
-    bodyChildren = $('body > *')
-    $(bodyChildren).detach()
-    window.todotxt = $body.html()
-    $body.empty()
-    bodyChildren.appendTo($body)
-
-    `
-    function normalizedFilepath(filepath) {
-        if (filepath === undefined) {
-            // Default to the file itself if no other filepath given
-            filepath = $.twFile.convertUriToLocalPath(location.href);
-        } else {
-
-            // Strip space, tab, from beginning.
-            // Strip space, tab, backslash, slash from end.
-            filepath = filepath.match(/^[ \t]*(.*?)[ \t\\\/]*$/)[1];
-
-            // Check if absolute path
-            if (filepath.search(/^([a-z]:)?[\/\\]/i) == -1)
-            {
-                // Prepend working directory to relative path/bare filename.
-                // (Otherwise default twFile path is in an odd place.)
-
-                // Get the current file
-                var path = $.twFile.convertUriToLocalPath(location.href);
-
-                // Strip filename off
-                path = path.match(/^(.*[\\\/]).*?$/)[1];
-
-                filepath = path + filepath;
-            }
-            filepath = filepath.replace(/\//g, '\\');
-        }
-        return filepath;
-    }`
-
-    window.nfp = normalizedFilepath
-    window.twfile = twfile
-
 
 
     init()
