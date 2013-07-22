@@ -7,3 +7,4 @@ todo.js
 wrapper.js
 version.txt
 !TiddlySaver.jar
+*.lnk
