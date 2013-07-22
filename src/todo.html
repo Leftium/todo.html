@@ -44,4 +44,8 @@ x 2014-08-23 2013-07-22 Rule 2: The date of completion appears directly after th
     </div>
 </noscript>
 
+
 <script data-main="js/main" src="js/require-jquery.js"></script>
+<script>
+    requirejs.config({ shim: { 'twfile': { exports: '$.twFile' } } });
+</script>

@@ -3,7 +3,7 @@
 #
 # written by Larry Ng
 
-require ['jquery', 'coffee-script', 'nodeutil'], ($, CoffeeScript, nodeutil) ->
+require ['jquery', 'coffee-script', 'nodeutil', 'twfile'], ($, CoffeeScript, nodeutil, twfile) ->
 
   $ ->
     SAVED_CONSOLE_LOG = console.log
@@ -228,5 +228,40 @@ require ['jquery', 'coffee-script', 'nodeutil'], ($, CoffeeScript, nodeutil) ->
     window.todotxt = $body.html()
     $body.empty()
     bodyChildren.appendTo($body)
+
+    `
+    function normalizedFilepath(filepath) {
+        if (filepath === undefined) {
+            // Default to the file itself if no other filepath given
+            filepath = $.twFile.convertUriToLocalPath(location.href);
+        } else {
+
+            // Strip space, tab, from beginning.
+            // Strip space, tab, backslash, slash from end.
+            filepath = filepath.match(/^[ \t]*(.*?)[ \t\\\/]*$/)[1];
+
+            // Check if absolute path
+            if (filepath.search(/^([a-z]:)?[\/\\]/i) == -1)
+            {
+                // Prepend working directory to relative path/bare filename.
+                // (Otherwise default twFile path is in an odd place.)
+
+                // Get the current file
+                var path = $.twFile.convertUriToLocalPath(location.href);
+
+                // Strip filename off
+                path = path.match(/^(.*[\\\/]).*?$/)[1];
+
+                filepath = path + filepath;
+            }
+            filepath = filepath.replace(/\//g, '\\');
+        }
+        return filepath;
+    }`
+
+    window.nfp = normalizedFilepath
+    window.twfile = twfile
+
+
 
     init()
