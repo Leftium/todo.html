@@ -8,3 +8,4 @@ wrapper.js
 version.txt
 !TiddlySaver.jar
 *.lnk
+built/
