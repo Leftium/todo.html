@@ -1,5 +1,5 @@
 
-define 'store', ['jquery', 'twfile'], ($, file) ->
+define 'store', ['jquery', 'localfile'], ($, localfile) ->
 
     $ ->
         # Strip todo data from DOM
@@ -13,7 +13,7 @@ define 'store', ['jquery', 'twfile'], ($, file) ->
     normalizedPath = (filepath) ->
         if !filepath
             # Default to the file itself if no other filepath given.
-            filepath = file.convertUriToLocalPath location.href
+            filepath = localfile.convertUriToLocalPath location.href
         else
             # Strip space, tab, from beginning.
             # Strip space, tab, backslash, slash from end.
@@ -25,7 +25,7 @@ define 'store', ['jquery', 'twfile'], ($, file) ->
                 # (Otherwise default twFile path ends up in odd places.)
 
                 # Get the current file
-                path = file.convertUriToLocalPath location.href
+                path = localfile.convertUriToLocalPath location.href
 
                 # Strip filename off
                 path = path.match(/^(.*[\\\/]).*?$/)[1]
@@ -40,15 +40,15 @@ define 'store', ['jquery', 'twfile'], ($, file) ->
         '(<!DOCTYPE html>[\\s\\S]*$)', 'm')
 
     load = ->
-        JSON.parse(file.load(normalizedPath()).replace(reStore, '$2'))
+        JSON.parse(localfile.load(normalizedPath()).replace(reStore, '$2'))
 
 
     save = (store) ->
         jsonStr = JSON.stringify(store)
-        oldContents = file.load(normalizedPath())
+        oldContents = localfile.load(normalizedPath())
         newContents = oldContents.replace(reStore, '$1\n'+ jsonStr + '\n$3')
 
-        file.save(normalizedPath(), newContents)
+        localfile.save(normalizedPath(), newContents)
 
     {
         normalizedPath: normalizedPath,

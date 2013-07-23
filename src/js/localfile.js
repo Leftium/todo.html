@@ -1,23 +1,16 @@
 /*
-jQuery.twFile.js
+localfile.js
 
-jQuery plugin for loading a file and saving data to a file
+AMD module for loading a file and saving data to a file
 
-Copyright (c) UnaMesa Association 2009
+Based on: jQuery.twFile.js Copyright (c) UnaMesa Association 2009
 
-Triple licensed under the BSD, MIT and GPL licenses:
-  http://www.opensource.org/licenses/bsd-license.php
-  http://www.opensource.org/licenses/mit-license.php
-  http://www.gnu.org/licenses/gpl.html
+Licensed under the MIT license:
+http://www.opensource.org/licenses/mit-license.php
 */
 
-
-(function($) {
-    if(!$.twFile) {
-        $.twFile = {};
-    }
-
-    $.extend($.twFile,{
+define([], function() {
+    var localfile = {
         currentDriver: null,
         driverList: ["activeX", "mozilla"],
 
@@ -90,7 +83,7 @@ Triple licensed under the BSD, MIT and GPL licenses:
             }
             return this.currentDriver;
         }
-    });
+    }
 
     // Private driver implementations for each browser
 
@@ -236,5 +229,6 @@ Triple licensed under the BSD, MIT and GPL licenses:
         return i > 0 ? url.substring(i-1) : url;
     }
 
-})(jQuery);
+    return localfile;
+});
 
