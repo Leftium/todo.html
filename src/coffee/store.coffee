@@ -1,4 +1,5 @@
 define 'store', ['jquery', 'localfile'], ($, localfile) ->
+    innerHTML = window.document.documentElement.innerHTML
 
     $ ->
         # Strip todo data from DOM
@@ -34,20 +35,19 @@ define 'store', ['jquery', 'localfile'], ($, localfile) ->
             filepath = filepath.replace(/\//g, '\\')
 
     reStore = new RegExp(
-        '([\\s\\S]*!!WARNING!! Do not modify contents below. \\(' +
-        'https://github.com/Leftium/todo.html\\)\\n\\n)([\\s\\S]*)' +
-        '(\\n<!' + 'DOCTYPE html>[\\s\\S]*$)', 'm')
+        '([\\s\\S]*!!' + 'WARNING!! Do not modify contents below. \\(' +
+        'https://github.com/Leftium/todo.html\\)\\n\\n)' +
+        '([\\s\\S]*)(\\n!!END' + 'STORE!![\\s\\S]*$)', 'm')
 
     load = ->
-        JSON.parse(localfile.load(normalizedPath()).replace(reStore, '$2'))
+        JSON.parse innerHTML.replace(reStore, '$2'), '$2'
 
 
     save = (store) ->
         jsonStr = JSON.stringify(store)
-        oldContents = localfile.load(normalizedPath())
-        newContents = oldContents.replace(reStore, '$1\n'+ jsonStr + '\n$3')
-
-        localfile.save(normalizedPath(), newContents)
+        if oldContents = localfile.load normalizedPath()
+            newContents = oldContents.replace reStore, '$1\n'+ jsonStr + '\n$3'
+            localfile.save normalizedPath(), newContents
 
     {
         normalizedPath: normalizedPath,
