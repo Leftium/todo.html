@@ -211,7 +211,7 @@ define([], function() {
                     out.close();
                     return true;
                 } catch(ex) {
-                    alert("Exception while attempting to save\n\n" + ex);
+                    //#alert("Exception while attempting to save\n\n" + ex);
                     return false;
                 }
             }
