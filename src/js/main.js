@@ -3,7 +3,7 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __slice = [].slice;
 
-  require(['jquery', 'coffee-script', 'nodeutil', 'store'], function($, CoffeeScript, nodeutil, store) {
+  require(['jquery', 'nodeutil', 'store'], function($, nodeutil, store) {
     return $(function() {
       var $input, $inputcopy, $inputdiv, $inputl, $inputr, $output, $prompt, CoffeeREPL, SAVED_CONSOLE_LOG, escapeHTML, init, resizeInput, scrollToBottom;
       SAVED_CONSOLE_LOG = console.log;
@@ -80,11 +80,9 @@
         };
 
         CoffeeREPL.prototype.processSaved = function() {
-          var compiled, e, ouput, output, value;
+          var e, ouput, output, value;
           try {
-            compiled = CoffeeScript.compile(this.saved);
-            compiled = compiled.slice(14, -17);
-            value = eval.call(window, compiled);
+            value = eval.call(window, this.saved);
             window[this.settings.lastVariable] = value;
             output = nodeutil.inspect(value, this.settings.showHidden, this.settings.maxDepth, this.settings.colorize);
           } catch (_error) {
@@ -215,7 +213,7 @@
           text = [" ", "<strong>Features</strong>", "<strong>========</strong>", "+ <strong>Esc</strong> toggles multiline mode.", "+ <strong>Up/Down arrow</strong> flips through line history.", "+ <strong>" + repl.settings.lastVariable + "</strong> stores the last returned value.", "+ Access the internals of this console through <strong>$$</strong>.", "+ <strong>$$.clear()</strong> clears this console.", " ", "<strong>Settings</strong>", "<strong>========</strong>", "You can modify the behavior of this REPL by altering <strong>$$.settings</strong>:", " ", "+ <strong>lastVariable</strong> (" + repl.settings.lastVariable + "): variable name in which last returned value is stored", "+ <strong>maxLines</strong> (" + repl.settings.maxLines + "): max line count of this console", "+ <strong>maxDepth</strong> (" + repl.settings.maxDepth + "): max depth in which to inspect outputted object", "+ <strong>showHidden</strong> (" + repl.settings.showHidden + "): flag to output hidden (not enumerable) properties of objects", "+ <strong>colorize</strong> (" + repl.settings.colorize + "): flag to colorize output (set to false if REPL is slow)", " ", "<strong>$$.saveSettings()</strong> will save settings to localStorage.", "<strong>$$.resetSettings()</strong> will reset settings to default.", " "].join('\n');
           return repl.print(text);
         };
-        return repl.print(["# CoffeeScript v" + CoffeeScript.VERSION + " REPL", "# <a href=\"https://github.com/larryng/coffeescript-repl\" target=\"_blank\">https://github.com/larryng/coffeescript-repl</a>", "#", "# help() for features and tips.", " "].join('\n'));
+        return repl.print(["# <a href=\"https://github.com/larryng/coffeescript-repl\" target=\"_blank\">https://github.com/larryng/coffeescript-repl</a>", "#", "# help() for features and tips.", " "].join('\n'));
       };
       return init();
     });

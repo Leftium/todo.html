@@ -3,7 +3,7 @@
 #
 # written by Larry Ng
 
-require ['jquery', 'coffee-script', 'nodeutil', 'store'], ($, CoffeeScript, nodeutil, store) ->
+require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
 
   $ ->
     SAVED_CONSOLE_LOG = console.log
@@ -60,9 +60,7 @@ require ['jquery', 'coffee-script', 'nodeutil', 'store'], ($, CoffeeScript, node
 
       processSaved: =>
         try
-          compiled = CoffeeScript.compile @saved
-          compiled = compiled[14...-17]
-          value = eval.call window, compiled
+          value = eval.call window, @saved
           window[@settings.lastVariable] = value
           output = nodeutil.inspect value, @settings.showHidden, @settings.maxDepth, @settings.colorize
         catch e
@@ -218,7 +216,6 @@ require ['jquery', 'coffee-script', 'nodeutil', 'store'], ($, CoffeeScript, node
 
       # print header
       repl.print [
-        "# CoffeeScript v#{CoffeeScript.VERSION} REPL"
         "# <a href=\"https://github.com/larryng/coffeescript-repl\" target=\"_blank\">https://github.com/larryng/coffeescript-repl</a>"
         "#"
         "# help() for features and tips."
