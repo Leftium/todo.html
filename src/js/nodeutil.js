@@ -21,9 +21,7 @@
 
 // modified by Larry Ng
 
-define(
-
-  (function () {
+define([], function () {
     var exports = {};
 
     var formatRegExp = /%[sdj%]/g;
@@ -543,6 +541,5 @@ define(
       return origin;
     };
 
-    return exports
-  })()
-)
+    return exports;
+});
