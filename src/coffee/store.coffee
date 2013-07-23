@@ -35,9 +35,9 @@ define 'store', ['jquery', 'localfile'], ($, localfile) ->
             filepath = filepath.replace(/\//g, '\\')
 
     reStore = new RegExp(
-        '([\\s\\S]*!!' + 'WARNING!! Do not modify contents below. \\(' +
-        'https://github.com/Leftium/todo.html\\)\\n\\n)' +
-        '([\\s\\S]*)(\\n!!END' + 'STORE!![\\s\\S]*$)', 'm')
+        '([\\s\\S]*!!' + 'WARNING!! Do not edit this line. \\(' +
+        'https://github.com/Leftium/todo.html\\))' +
+        '([\\s\\S]*)(!!END' + 'STORE!![\\s\\S]*$)', 'm')
 
     load = ->
         JSON.parse innerHTML.replace(reStore, '$2'), '$2'
@@ -46,7 +46,7 @@ define 'store', ['jquery', 'localfile'], ($, localfile) ->
     save = (store) ->
         jsonStr = JSON.stringify(store)
         if oldContents = localfile.load normalizedPath()
-            newContents = oldContents.replace reStore, '$1\n'+ jsonStr + '\n$3'
+            newContents = oldContents.replace reStore, '$1       ' + jsonStr + '$3'
             localfile.save normalizedPath(), newContents
 
     {

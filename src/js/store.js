@@ -26,7 +26,7 @@
         return filepath = filepath.replace(/\//g, '\\');
       }
     };
-    reStore = new RegExp('([\\s\\S]*!!' + 'WARNING!! Do not modify contents below. \\(' + 'https://github.com/Leftium/todo.html\\)\\n\\n)' + '([\\s\\S]*)(\\n!!END' + 'STORE!![\\s\\S]*$)', 'm');
+    reStore = new RegExp('([\\s\\S]*!!' + 'WARNING!! Do not edit this line. \\(' + 'https://github.com/Leftium/todo.html\\))' + '([\\s\\S]*)(!!END' + 'STORE!![\\s\\S]*$)', 'm');
     load = function() {
       return JSON.parse(innerHTML.replace(reStore, '$2'), '$2');
     };
@@ -34,7 +34,7 @@
       var jsonStr, newContents, oldContents;
       jsonStr = JSON.stringify(store);
       if (oldContents = localfile.load(normalizedPath())) {
-        newContents = oldContents.replace(reStore, '$1\n' + jsonStr + '\n$3');
+        newContents = oldContents.replace(reStore, '$1       ' + jsonStr + '$3');
         return localfile.save(normalizedPath(), newContents);
       }
     };
