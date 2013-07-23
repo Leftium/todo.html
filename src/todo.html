@@ -28,6 +28,10 @@ x 2014-08-23 2013-07-22 Rule 2: The date of completion appears directly after th
     background-color: black;
     text-align: center;
 }
+
+body {
+    opacity: 0;
+}
 </style>
 
 <div id="container">
@@ -46,7 +50,12 @@ x 2014-08-23 2013-07-22 Rule 2: The date of completion appears directly after th
 </div>
 
 <noscript>
-    <style> body { overflow: hidden; font-family: sans-serif; } </style>
+    <style>
+        body {
+            overflow: hidden; font-family: sans-serif;
+            opacity: 1;
+        }
+    </style>
     <div id="noscript-overlay">
         <h1>JavaScript is needed by todo.html!</h1>
         <h3>Tip: "Allow Blocked Content" in MS Internet Explorer.</h3>

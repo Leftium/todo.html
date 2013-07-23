@@ -181,6 +181,9 @@ require ['jquery', 'coffee-script', 'nodeutil', 'store'], ($, CoffeeScript, node
       # expose repl as $$
       window.$$ = repl
 
+      # make font visible
+      $('body').css('opacity', 1)
+
       # initialize window
       resizeInput()
       $input.focus()

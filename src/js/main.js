@@ -207,6 +207,7 @@
           return repl.print.apply(repl, args);
         };
         window.$$ = repl;
+        $('body').css('opacity', 1);
         resizeInput();
         $input.focus();
         window.help = function() {
