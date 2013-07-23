@@ -1,4 +1,3 @@
-
 define 'store', ['jquery', 'localfile'], ($, localfile) ->
 
     $ ->
@@ -35,9 +34,9 @@ define 'store', ['jquery', 'localfile'], ($, localfile) ->
             filepath = filepath.replace(/\//g, '\\')
 
     reStore = new RegExp(
-        '([\\s\\S]*### START STORE \\(for more info: www.todo.html\\) ###)' +
-        '([\\s\\S]*)' +
-        '(<!DOCTYPE html>[\\s\\S]*$)', 'm')
+        '([\\s\\S]*!!WARNING!! Do not modify contents below. \\(' +
+        'https://github.com/Leftium/todo.html\\)\\n\\n)([\\s\\S]*)' +
+        '(\\n<!' + 'DOCTYPE html>[\\s\\S]*$)', 'm')
 
     load = ->
         JSON.parse(localfile.load(normalizedPath()).replace(reStore, '$2'))

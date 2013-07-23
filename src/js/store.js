@@ -25,7 +25,7 @@
         return filepath = filepath.replace(/\//g, '\\');
       }
     };
-    reStore = new RegExp('([\\s\\S]*### START STORE \\(for more info: www.todo.html\\) ###)' + '([\\s\\S]*)' + '(<!DOCTYPE html>[\\s\\S]*$)', 'm');
+    reStore = new RegExp('([\\s\\S]*!!WARNING!! Do not modify contents below. \\(' + 'https://github.com/Leftium/todo.html\\)\\n\\n)([\\s\\S]*)' + '(\\n<!' + 'DOCTYPE html>[\\s\\S]*$)', 'm');
     load = function() {
       return JSON.parse(localfile.load(normalizedPath()).replace(reStore, '$2'));
     };
