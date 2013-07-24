@@ -34,19 +34,36 @@ define 'store', ['jquery', 'localfile'], ($, localfile) ->
 
             filepath = filepath.replace(/\//g, '\\')
 
-    reStore = new RegExp(
-        '([\\s\\S]*!!' + 'WARNING!! Do not edit this line. \\(' +
-        'https://github.com/Leftium/todo.html\\))' +
-        '([\\s\\S]*)(!!END' + 'STORE!![\\s\\S]*$)', 'm')
+    #  todo.html file structure:
+
+    #  [markup]*
+    #  [todo_1]
+    #  [todo_2]
+    #  ...
+    #  [todo_n]
+    #
+    #  {four empty lines for visual separation}
+    #
+    #
+    #  [enter] [store] [close] [markup]
+    #
+    #  * All html should be at end of file, but browser innerHTML have some
+    #    markup shifted to the front (<html> to <body> elements).
+
+    todoHtmlRegex = ///
+        ([\s\S]*)                                   #1 markup, todos, blanks
+        (^!!WARNING!!.Do.not.edit.this.line.[^{]*)  #2 enter
+        ([\s\S]*)                                   #3 store
+        (!!ENDSTORE!![\s\S]*$)                      #4 close, markup
+    ///m
 
     load = ->
-        JSON.parse innerHTML.replace(reStore, '$2'), '$2'
-
+        JSON.parse innerHTML.replace(todoHtmlRegex, '$3')
 
     save = (store) ->
         jsonStr = JSON.stringify(store)
         if oldContents = localfile.load normalizedPath()
-            newContents = oldContents.replace reStore, '$1       ' + jsonStr + '$3'
+            newContents = oldContents.replace todoHtmlRegex, "$1$2#{jsonStr}$4"
             localfile.save normalizedPath(), newContents
 
     {
