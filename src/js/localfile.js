@@ -71,6 +71,35 @@ define([], function() {
             return localPath || originalPath;
         },
 
+        normalizedPath: function (filepath) {
+            if (filepath === undefined) {
+                // Default to the file itself if no other filepath given
+                filepath = this.convertUriToLocalPath(location.href);
+            } else {
+
+                // Strip space, tab, from beginning.
+                // Strip space, tab, backslash, slash from end.
+                filepath = filepath.match(/^[ \t]*(.*?)[ \t\\\/]*$/)[1];
+
+                // Check if absolute path
+                if (filepath.search(/^([a-z]:)?[\/\\]/i) == -1)
+                {
+                    // Prepend working directory to relative path/bare filename.
+                    // (Otherwise default twFile path is in an odd place.)
+
+                    // Get the current file
+                    var path = this.convertUriToLocalPath(location.href);
+
+                    // Strip filename off
+                    path = path.match(/^(.*[\\\/]).*?$/)[1];
+
+                    filepath = path + filepath;
+                }
+                filepath = filepath.replace(/\//g, '\\');
+            }
+            return filepath;
+        },
+
         // Private functions
 
         // Returns a reference to the current driver
