@@ -27,10 +27,10 @@ define 'store', ['jquery', 'localfile'], ($, localfile) ->
     #    markup shifted to the front (<html> to <body> elements).
 
     todoHtmlRegex = ///
-        ([\s\S]*)                                   #1 markup, todos, blanks
-        (^!!WARNING!!.Do.not.edit.this.line.[^{]*)  #2 enter
-        ([\s\S]*)                                   #3 store
-        (!!ENDSTORE!![\s\S]*$)                      #4 close, markup
+        ([\s\S]*)                                     #1 markup, todos, blanks
+        (^!!WARNING!{1}!.Do.not.edit.this.line.[^{]*) #2 enter
+        ([\s\S]*)                                     #3 store
+        (!!ENDSTORE!{1}![\s\S]*$)                     #4 close, markup
     ///m
 
     load = ->

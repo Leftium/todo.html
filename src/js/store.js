@@ -12,7 +12,7 @@
       $body.empty();
       return bodyChildren.appendTo($body);
     });
-    todoHtmlRegex = /([\s\S]*)(^!!WARNING!!.Do.not.edit.this.line.[^{]*)([\s\S]*)(!!ENDSTORE!![\s\S]*$)/m;
+    todoHtmlRegex = /([\s\S]*)(^!!WARNING!{1}!.Do.not.edit.this.line.[^{]*)([\s\S]*)(!!ENDSTORE!{1}![\s\S]*$)/m;
     load = function() {
       return JSON.parse(innerHTML.replace(todoHtmlRegex, '$3'));
     };
