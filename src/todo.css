@@ -28,6 +28,7 @@
 
   #output {
     word-wrap: break-word;
+    white-space: pre-wrap;
   }
 
   #inputdiv {
