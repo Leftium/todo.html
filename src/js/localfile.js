@@ -21,6 +21,10 @@ define([], function() {
         //    /path/path/path/filename - Mac/Unix local file
         // returns the text of the file, or null if the operation cannot be performed or false if there was an error
         load: function(filePath) {
+            if (filePath === undefined) {
+                // Default to the file itself if no other filepath given
+                filePath = this.convertUriToLocalPath(location.href);
+            }
             var d = this.getDriver();
             return d ? d.loadFile(filePath) : null;
         },
@@ -29,6 +33,11 @@ define([], function() {
         // content is the string to save
         // returns true if the file was saved successfully, or null if the operation cannot be performed or false if there was an error
         save: function(filePath,content) {
+            if (content === undefined) {
+                content = filePath;
+                // Default to the file itself if no other filepath given
+                filePath = this.convertUriToLocalPath(location.href);
+            }
             var d = this.getDriver();
             return d ? d.saveFile(filePath,content) : null;
         },
