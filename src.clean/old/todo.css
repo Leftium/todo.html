@@ -1,0 +1,56 @@
+body {
+    overflow: hidden;
+}
+
+#cli-box {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+}
+
+#cli-output-wrapper, #cli-input-wrapper {
+    position: absolute;
+    width: 100%;
+}
+
+#cli-input-wrapper {
+    top: 0;
+    height: 20px;
+}
+
+#cli-output-wrapper {
+    top: 22px;
+    bottom: 0px;
+    word-wrap: break-word;
+}
+
+#cli-output {
+    overflow: auto;
+    padding: 0px 5px;
+    height: 100%;
+
+    font-family: Courier New, monospace;
+    font-size: .8em;
+    color: white;
+}
+
+#scroll-padding {
+    height: 101%;
+}
+
+#cli-input {
+    margin: 0;
+    border: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+}
+
+#usage, #shorthelp, #help {
+    position: fixed;  /* suppress scroll bars */
+}
+

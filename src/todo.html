@@ -1,54 +1,61 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>todo.html by leftium@gmail.com v0.2.9.4alpha</title>
-  <link rel="stylesheet" type="text/css" href="todo.css" />
-</head>
-<body>
+(A) Incomplete Task Rule 1: If priority exists, it ALWAYS appears first.
+(A) 2013-07-22 Incomplete Task Rule 2: Creation date may optionally appear directly after priority and a space.
+Incomplete Task Rule 3: @Contexts and +Projects may appear anywhere in the line after priority/prepended date.
 
-<div id="store-area">
-<pre id="*history">["","t help","todo.sh ls","todo.sh shorthelp"]</pre>
-<pre id="#test">"TEST"</pre>
-<pre id="$TODO_DIR">"C:/Users/Leftium/.todo"</pre>
-<pre id="$ONE">"1"</pre>
-<pre id="$TWO">"1/2"</pre>
-<pre id="$THREE">"1/2/3"</pre>
-<pre id="$TODO_FILE">"C:/Users/Leftium/.todo/todo.txt"</pre>
-<pre id="$DONE_FILE">"C:/Users/Leftium/.todo/done.txt"</pre>
-<pre id="$REPORT_FILE">"C:/Users/Leftium/.todo/report.txt"</pre>
-<pre id="$TMP_FILE">"C:/Users/Leftium/.todo/todo.tmp"</pre>
-<pre id="$HOME">"C:/Users/Leftium"</pre>
-<pre id="$TODOTXT_VERBOSE">"0;"</pre>
+x Rule 1: A completed task starts with an x.
+x 2014-08-23 2013-07-22 Rule 2: The date of completion appears directly after the x, separated by a space.
+
+
+
+
+!!WARNING!! Do not edit this line. [https://github.com/Leftium/todo.html]       {"history":["help()","2 + 1","$","alert('test')",""]}!!ENDSTORE!!
+<!DOCTYPE html>
+<title>todo.html</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<link rel="stylesheet" type="text/css" href="todo.css">
+
+<style>
+#noscript-overlay {
+    position:fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #222;
+    text-align: center;
+}
+
+body {
+    opacity: 0;
+}
+</style>
+
+<div id="container">
+  <div id="outputdiv">
+    <pre id="output"></pre>
+  </div>
+  <div id="inputdiv">
+    <div id="inputl">
+      <pre id="prompt">coffee&gt;&nbsp;</pre>
+    </div>
+    <div id="inputr">
+      <textarea id="input" spellcheck="false"></textarea>
+      <div id="inputcopy"></div>
+    </div>
+  </div>
 </div>
-<!--POST-STOREAREA-->
-<!--POST-BODY-START-->
 
-  <div id='cli-box'>
-
-    <div id='cli-output-wrapper'>
-      <div id='cli-output'>
-        <div id='scroll-padding'></div>
-      </div>
+<noscript>
+    <style>
+        body {
+            overflow: hidden; font-family: sans-serif;
+            opacity: 1;
+        }
+    </style>
+    <div id="noscript-overlay">
+        <h1>JavaScript is needed by todo.html!</h1>
+        <h3>Tip: "Allow Blocked Content" in MS Internet Explorer.</h3>
     </div>
+</noscript>
 
-    <div id='cli-input-wrapper'>
-      <input id='cli-input' type='text'></input>
-    </div>
-
-  </div> <!-- cli-box -->
-
-  <script type="text/javascript" src="ba-debug.js"  ></script>
-  <script type="text/javascript" src="split.js"  ></script>
-  <script type="text/javascript" src="jquery.js" ></script>
-  <script type="text/javascript" src="twfile.js" ></script>
-  <script type="text/javascript" src="date.js"   ></script>
-  <script type="text/javascript" src="saving.js" ></script>
-  <script type="text/javascript" src="taffy.js"  ></script>
-  <script type="text/javascript" src="shell.js"  ></script>
-
-  <script type="text/javascript" src="core/getopt.js"  ></script>
-  <script type="text/javascript" src="core/todo.js"  ></script>
-</body>
-
-</html>
+<script data-main="js/main" src="js/require.js"></script>
