@@ -5,7 +5,7 @@
 
   require(['jquery', 'nodeutil', 'store'], function($, nodeutil, store) {
     return $(function() {
-      var $input, $inputcopy, $inputdiv, $inputl, $inputr, $output, $prompt, CoffeeREPL, SAVED_CONSOLE_LOG, escapeHTML, init, resizeInput, scrollToBottom;
+      var $input, $inputcopy, $inputdiv, $inputl, $inputr, $output, $prompt, SAVED_CONSOLE_LOG, TodoREPL, escapeHTML, init, resizeInput, scrollToBottom;
       SAVED_CONSOLE_LOG = console.log;
       $output = $('#output');
       $input = $('#input');
@@ -17,7 +17,7 @@
       escapeHTML = function(s) {
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       };
-      CoffeeREPL = (function() {
+      TodoREPL = (function() {
         var DEFAULT_SETTINGS;
 
         DEFAULT_SETTINGS = {
@@ -28,7 +28,7 @@
           colorize: true
         };
 
-        function CoffeeREPL(output, input, prompt, settings) {
+        function TodoREPL(output, input, prompt, settings) {
           var k, v, _ref;
           this.output = output;
           this.input = input;
@@ -62,15 +62,15 @@
           this.input.keydown(this.handleKeypress);
         }
 
-        CoffeeREPL.prototype.resetSettings = function() {
+        TodoREPL.prototype.resetSettings = function() {
           return localStorage.clear();
         };
 
-        CoffeeREPL.prototype.saveSettings = function() {
+        TodoREPL.prototype.saveSettings = function() {
           return localStorage.settings = JSON.stringify($.extend({}, this.settings));
         };
 
-        CoffeeREPL.prototype.print = function() {
+        TodoREPL.prototype.print = function() {
           var args, o, s;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
           s = args.join(' ') || ' ';
@@ -79,8 +79,8 @@
           return void 0;
         };
 
-        CoffeeREPL.prototype.processSaved = function() {
-          var e, ouput, output, value;
+        TodoREPL.prototype.processSaved = function() {
+          var e, output, value;
           try {
             value = eval.call(window, this.saved);
             window[this.settings.lastVariable] = value;
@@ -90,8 +90,9 @@
             if (e.stack) {
               output = e.stack;
               if (output.split('\n')[0] !== e.toString()) {
-                ouput = "" + (e.toString()) + "\n" + e.stack;
+                output = "" + (e.toString()) + "\n\nStack trace:\n" + e.stack;
               }
+              output = output.replace(/file.*\//g, '');
             } else {
               output = e.toString();
             }
@@ -100,13 +101,13 @@
           return this.print(output);
         };
 
-        CoffeeREPL.prototype.setPrompt = function() {
+        TodoREPL.prototype.setPrompt = function() {
           var s;
-          s = this.multiline ? '------' : 'coffee';
+          s = this.multiline ? '----' : 'todo';
           return this.prompt.html("" + s + "&gt;&nbsp;");
         };
 
-        CoffeeREPL.prototype.addToHistory = function(s) {
+        TodoREPL.prototype.addToHistory = function(s) {
           this.history.unshift(s);
           store.save({
             history: this.history
@@ -114,18 +115,18 @@
           return this.historyi = -1;
         };
 
-        CoffeeREPL.prototype.addToSaved = function(s) {
+        TodoREPL.prototype.addToSaved = function(s) {
           this.saved += s.slice(0, -1) === '\\' ? s.slice(0, -1) : s;
           this.saved += '\n';
           return this.addToHistory(s);
         };
 
-        CoffeeREPL.prototype.clear = function() {
+        TodoREPL.prototype.clear = function() {
           this.output[0].innerHTML = '';
           return void 0;
         };
 
-        CoffeeREPL.prototype.handleKeypress = function(e) {
+        TodoREPL.prototype.handleKeypress = function(e) {
           var input;
           switch (e.which) {
             case 13:
@@ -170,7 +171,7 @@
           }
         };
 
-        return CoffeeREPL;
+        return TodoREPL;
 
       })();
       resizeInput = function(e) {
@@ -197,7 +198,7 @@
             return $input.focus();
           }
         });
-        repl = new CoffeeREPL($output, $input, $prompt);
+        repl = new TodoREPL($output, $input, $prompt);
         console.log = function() {
           var args;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -209,11 +210,9 @@
         resizeInput();
         $input.focus();
         window.help = function() {
-          var text;
-          text = [" ", "<strong>Features</strong>", "<strong>========</strong>", "+ <strong>Esc</strong> toggles multiline mode.", "+ <strong>Up/Down arrow</strong> flips through line history.", "+ <strong>" + repl.settings.lastVariable + "</strong> stores the last returned value.", "+ Access the internals of this console through <strong>$$</strong>.", "+ <strong>$$.clear()</strong> clears this console.", " ", "<strong>Settings</strong>", "<strong>========</strong>", "You can modify the behavior of this REPL by altering <strong>$$.settings</strong>:", " ", "+ <strong>lastVariable</strong> (" + repl.settings.lastVariable + "): variable name in which last returned value is stored", "+ <strong>maxLines</strong> (" + repl.settings.maxLines + "): max line count of this console", "+ <strong>maxDepth</strong> (" + repl.settings.maxDepth + "): max depth in which to inspect outputted object", "+ <strong>showHidden</strong> (" + repl.settings.showHidden + "): flag to output hidden (not enumerable) properties of objects", "+ <strong>colorize</strong> (" + repl.settings.colorize + "): flag to colorize output (set to false if REPL is slow)", " ", "<strong>$$.saveSettings()</strong> will save settings to localStorage.", "<strong>$$.resetSettings()</strong> will reset settings to default.", " "].join('\n');
-          return repl.print(text);
+          return repl.print("<strong>Features</strong>\n<strong>========</strong>\n+ Built-in JavaScript interpreter.\n+ <strong>[Esc]</strong> toggles multiline mode.\n+ <strong>[Up]/[Down] arrow</strong> flips through line history.\n+ <strong>" + repl.settings.lastVariable + "</strong> stores the last returned value.\n+ Access the internals of this console through <strong>$$</strong>.\n+ <strong>$$.clear()</strong> clears this console.\n\n<strong>Settings</strong>\n<strong>========</strong>\nYou can modify the behavior of this REPL by altering <strong>$$.settings</strong>:\n\n+ <strong>lastVariable</strong> (" + repl.settings.lastVariable + "): variable name in which last returned value is stored\n+ <strong>maxLines</strong> (" + repl.settings.maxLines + "): max line count of this console\n+ <strong>maxDepth</strong> (" + repl.settings.maxDepth + "): max depth in which to inspect outputted object\n+ <strong>showHidden</strong> (" + repl.settings.showHidden + "): flag to output hidden (not enumerable) properties of objects\n+ <strong>colorize</strong> (" + repl.settings.colorize + "): flag to colorize output (set to false if REPL is slow)\n\n<strong>$$.saveSettings()</strong> will save settings to localStorage.\n<strong>$$.resetSettings()</strong> will reset settings to default.\n");
         };
-        return repl.print(["# <a href=\"https://github.com/larryng/coffeescript-repl\" target=\"_blank\">https://github.com/larryng/coffeescript-repl</a>", "#", "# help() for features and tips.", " "].join('\n'));
+        return repl.print("# <a href=\"http://github.com/Leftium/todo.html\" target=\"_blank\">http://github.com/Leftium/todo.html</a>\n#\n# help() for features and tips.\n");
       };
       return init();
     });
