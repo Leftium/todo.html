@@ -194,37 +194,33 @@ require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
       # help
       window.help = ->
         repl.print """
-<strong>Features</strong>
-<strong>========</strong>
-+ Built-in JavaScript interpreter.
-+ <strong>[Esc]</strong> toggles multiline mode.
-+ <strong>[Up]/[Down] arrow</strong> flips through line history.
-+ <strong>#{repl.settings.lastVariable}</strong> stores the last returned value.
-+ Access the internals of this console through <strong>$$</strong>.
-+ <strong>$$.clear()</strong> clears this console.
+          <strong>Features</strong>
+          <strong>========</strong>
+          + Built-in JavaScript interpreter.
+          + <strong>[Esc]</strong> toggles multiline mode.
+          + <strong>[Up]/[Down] arrow</strong> flips through line history.
+          + <strong>#{repl.settings.lastVariable}</strong> stores the last returned value.
+          + Access the internals of this console through <strong>$$</strong>.
+          + <strong>$$.clear()</strong> clears this console.
 
-<strong>Settings</strong>
-<strong>========</strong>
-You can modify the behavior of this REPL by altering <strong>$$.settings</strong>:
+          <strong>Settings</strong>
+          <strong>========</strong>
+          You can modify the behavior of this REPL by altering <strong>$$.settings</strong>:
 
-+ <strong>lastVariable</strong> (#{repl.settings.lastVariable}): variable name in which last returned value is stored
-+ <strong>maxLines</strong> (#{repl.settings.maxLines}): max line count of this console
-+ <strong>maxDepth</strong> (#{repl.settings.maxDepth}): max depth in which to inspect outputted object
-+ <strong>showHidden</strong> (#{repl.settings.showHidden}): flag to output hidden (not enumerable) properties of objects
-+ <strong>colorize</strong> (#{repl.settings.colorize}): flag to colorize output (set to false if REPL is slow)
+          + <strong>lastVariable</strong> (#{repl.settings.lastVariable}): variable name in which last returned value is stored
+          + <strong>maxLines</strong> (#{repl.settings.maxLines}): max line count of this console
+          + <strong>maxDepth</strong> (#{repl.settings.maxDepth}): max depth in which to inspect outputted object
+          + <strong>showHidden</strong> (#{repl.settings.showHidden}): flag to output hidden (not enumerable) properties of objects
+          + <strong>colorize</strong> (#{repl.settings.colorize}): flag to colorize output (set to false if REPL is slow)
 
-<strong>$$.saveSettings()</strong> will save settings to localStorage.
-<strong>$$.resetSettings()</strong> will reset settings to default.
+          <strong>$$.saveSettings()</strong> will save settings to localStorage.
+          <strong>$$.resetSettings()</strong> will reset settings to default.
 
-"""
+        """
 
       # print header
-      repl.print """
-# <a href=\"http://github.com/Leftium/todo.html\" target=\"_blank\">http://github.com/Leftium/todo.html</a>
-#
-# help() for features and tips.
-
-"""
+      @version()
+      repl.print '\nhelp() for features and tips.\n'
 
 
     init()
