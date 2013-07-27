@@ -1,3 +1,3 @@
 define(function () {
-    return 'version will be added here by gen-version-file.sh'
+    return 'gen-version-file.sh will insert version description here'
 });
