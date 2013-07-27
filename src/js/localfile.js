@@ -26,7 +26,7 @@ define([], function() {
                 filePath = this.convertUriToLocalPath(location.href);
             }
             var d = this.getDriver();
-            return d ? d.loadFile(filePath) : null;
+            return d ? d.loadFile(this.normalizedPath(filePath)) : null;
         },
         // Saves a string to a text file on the local file system
         // filePath is the path to the file in the format described above
@@ -39,7 +39,7 @@ define([], function() {
                 filePath = this.convertUriToLocalPath(location.href);
             }
             var d = this.getDriver();
-            return d ? d.saveFile(filePath,content) : null;
+            return d ? d.saveFile(this.normalizedPath(filePath),content) : null;
         },
         // Copies a file on the local file system
         // dest is the path to the destination file in the format described above
