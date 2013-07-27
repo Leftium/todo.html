@@ -9,3 +9,4 @@ version.txt
 !TiddlySaver.jar
 *.lnk
 built/
+node_modules/
