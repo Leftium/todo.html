@@ -1,0 +1,8 @@
+{
+  "name": "todo.html",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-html-smoosher": "~0.1.1",
+    "grunt-contrib-requirejs": "~0.4.1"
+  }
+}
