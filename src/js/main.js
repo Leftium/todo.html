@@ -3,7 +3,7 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __slice = [].slice;
 
-  require(['jquery', 'nodeutil', 'store'], function($, nodeutil, store) {
+  require(['version', 'jquery', 'nodeutil', 'store'], function(version, $, nodeutil, store) {
     return $(function() {
       var $input, $inputcopy, $inputdiv, $inputl, $inputr, $output, $prompt, SAVED_CONSOLE_LOG, TodoREPL, escapeHTML, init, resizeInput, scrollToBottom;
       SAVED_CONSOLE_LOG = console.log;
@@ -209,10 +209,14 @@
         $('body').css('opacity', 1);
         resizeInput();
         $input.focus();
+        window.version = function() {
+          return repl.print("todo.html REPL v" + version + "\n\nDeveloped by: John-Kim Murphy (http://Leftium.com)\nCode repository: https://github.com/Leftium/todo.html\n\nBased on idea by: Gina Trapani (http://ginatrapani.org)\nLicense: GPL http://www.gnu.org/copyleft/gpl.html\n");
+        };
         window.help = function() {
           return repl.print("<strong>Features</strong>\n<strong>========</strong>\n+ Built-in JavaScript interpreter.\n+ <strong>[Esc]</strong> toggles multiline mode.\n+ <strong>[Up]/[Down] arrow</strong> flips through line history.\n+ <strong>" + repl.settings.lastVariable + "</strong> stores the last returned value.\n+ Access the internals of this console through <strong>$$</strong>.\n+ <strong>$$.clear()</strong> clears this console.\n\n<strong>Settings</strong>\n<strong>========</strong>\nYou can modify the behavior of this REPL by altering <strong>$$.settings</strong>:\n\n+ <strong>lastVariable</strong> (" + repl.settings.lastVariable + "): variable name in which last returned value is stored\n+ <strong>maxLines</strong> (" + repl.settings.maxLines + "): max line count of this console\n+ <strong>maxDepth</strong> (" + repl.settings.maxDepth + "): max depth in which to inspect outputted object\n+ <strong>showHidden</strong> (" + repl.settings.showHidden + "): flag to output hidden (not enumerable) properties of objects\n+ <strong>colorize</strong> (" + repl.settings.colorize + "): flag to colorize output (set to false if REPL is slow)\n\n<strong>$$.saveSettings()</strong> will save settings to localStorage.\n<strong>$$.resetSettings()</strong> will reset settings to default.\n");
         };
-        return repl.print("# <a href=\"http://github.com/Leftium/todo.html\" target=\"_blank\">http://github.com/Leftium/todo.html</a>\n#\n# help() for features and tips.\n");
+        this.version();
+        return repl.print('\nhelp() for features and tips.\n');
       };
       return init();
     });

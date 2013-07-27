@@ -7,7 +7,7 @@
 # based on:
 #   https://github.com/larryng/coffeescript-repl
 
-require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
+require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store) ->
 
   $ ->
     SAVED_CONSOLE_LOG = console.log
@@ -190,6 +190,18 @@ require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
       # initialize window
       resizeInput()
       $input.focus()
+
+      window.version = () ->
+          repl.print """
+            todo.html REPL v#{version}
+
+            Developed by: John-Kim Murphy (http://Leftium.com)
+            Code repository: https://github.com/Leftium/todo.html
+
+            Based on idea by: Gina Trapani (http://ginatrapani.org)
+            License: GPL http://www.gnu.org/copyleft/gpl.html
+
+          """
 
       # help
       window.help = ->
