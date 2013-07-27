@@ -1,9 +1,13 @@
-# In-browser CoffeeScript REPL
-# https://github.com/larryng/coffeescript-repl
+# In-browser todo.txt REPL
+# http://github.com/Leftium/todo.html
 #
-# written by Larry Ng
+# written by John-Kim Murphy
+#
+#
+# based on:
+#   https://github.com/larryng/coffeescript-repl
 
-require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
+require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store) ->
 
   $ ->
     SAVED_CONSOLE_LOG = console.log
@@ -21,7 +25,7 @@ require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
       s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 
-    class CoffeeREPL
+    class TodoREPL
       DEFAULT_SETTINGS =
         lastVariable: '$_'
         maxLines: 500
@@ -70,14 +74,15 @@ require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
             # FF doesn't have Error.toString() as the first line of Error.stack
             # while Chrome does.
             if output.split('\n')[0] isnt e.toString()
-              ouput = "#{e.toString()}\n#{e.stack}"
+                output = "#{e.toString()}\n\nStack trace:\n#{e.stack}"
+            output = output.replace /file.*\//g, ''
           else
             output = e.toString()
         @saved = ''
         @print output
 
       setPrompt: =>
-        s = if @multiline then '------' else 'coffee'
+        s = if @multiline then '----' else 'todo'
         @prompt.html "#{s}&gt;&nbsp;"
 
       addToHistory: (s) =>
@@ -169,7 +174,7 @@ require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
           $input.focus()
 
       # instantiate our REPL
-      repl = new CoffeeREPL $output, $input, $prompt
+      repl = new TodoREPL $output, $input, $prompt
 
       # replace console.log
       console.log = (args...) ->
@@ -186,41 +191,48 @@ require ['jquery', 'nodeutil', 'store'], ($, nodeutil, store) ->
       resizeInput()
       $input.focus()
 
+      window.version = () ->
+          repl.print """
+            todo.html REPL v#{version}
+
+            Developed by: John-Kim Murphy (http://Leftium.com)
+            Code repository: https://github.com/Leftium/todo.html
+
+            Based on idea by: Gina Trapani (http://ginatrapani.org)
+            License: GPL http://www.gnu.org/copyleft/gpl.html
+
+          """
+
       # help
       window.help = ->
-        text = [
-          " "
-          "<strong>Features</strong>"
-          "<strong>========</strong>"
-          "+ <strong>Esc</strong> toggles multiline mode."
-          "+ <strong>Up/Down arrow</strong> flips through line history."
-          "+ <strong>#{repl.settings.lastVariable}</strong> stores the last returned value."
-          "+ Access the internals of this console through <strong>$$</strong>."
-          "+ <strong>$$.clear()</strong> clears this console."
-          " "
-          "<strong>Settings</strong>"
-          "<strong>========</strong>"
-          "You can modify the behavior of this REPL by altering <strong>$$.settings</strong>:"
-          " "
-          "+ <strong>lastVariable</strong> (#{repl.settings.lastVariable}): variable name in which last returned value is stored"
-          "+ <strong>maxLines</strong> (#{repl.settings.maxLines}): max line count of this console"
-          "+ <strong>maxDepth</strong> (#{repl.settings.maxDepth}): max depth in which to inspect outputted object"
-          "+ <strong>showHidden</strong> (#{repl.settings.showHidden}): flag to output hidden (not enumerable) properties of objects"
-          "+ <strong>colorize</strong> (#{repl.settings.colorize}): flag to colorize output (set to false if REPL is slow)"
-          " "
-          "<strong>$$.saveSettings()</strong> will save settings to localStorage."
-          "<strong>$$.resetSettings()</strong> will reset settings to default."
-          " "
-        ].join('\n')
-        repl.print text
+        repl.print """
+          <strong>Features</strong>
+          <strong>========</strong>
+          + Built-in JavaScript interpreter.
+          + <strong>[Esc]</strong> toggles multiline mode.
+          + <strong>[Up]/[Down] arrow</strong> flips through line history.
+          + <strong>#{repl.settings.lastVariable}</strong> stores the last returned value.
+          + Access the internals of this console through <strong>$$</strong>.
+          + <strong>$$.clear()</strong> clears this console.
+
+          <strong>Settings</strong>
+          <strong>========</strong>
+          You can modify the behavior of this REPL by altering <strong>$$.settings</strong>:
+
+          + <strong>lastVariable</strong> (#{repl.settings.lastVariable}): variable name in which last returned value is stored
+          + <strong>maxLines</strong> (#{repl.settings.maxLines}): max line count of this console
+          + <strong>maxDepth</strong> (#{repl.settings.maxDepth}): max depth in which to inspect outputted object
+          + <strong>showHidden</strong> (#{repl.settings.showHidden}): flag to output hidden (not enumerable) properties of objects
+          + <strong>colorize</strong> (#{repl.settings.colorize}): flag to colorize output (set to false if REPL is slow)
+
+          <strong>$$.saveSettings()</strong> will save settings to localStorage.
+          <strong>$$.resetSettings()</strong> will reset settings to default.
+
+        """
 
       # print header
-      repl.print [
-        "# <a href=\"https://github.com/larryng/coffeescript-repl\" target=\"_blank\">https://github.com/larryng/coffeescript-repl</a>"
-        "#"
-        "# help() for features and tips."
-        " "
-      ].join('\n')
+      @version()
+      repl.print '\nhelp() for features and tips.\n'
 
 
     init()

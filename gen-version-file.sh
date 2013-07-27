@@ -1,7 +1,8 @@
 #!/bin/sh
 # Based on git's GIT-VERSION-GEN.
 
-VERSION_FILE=version.txt
+VERSION_TXT=version.txt
+VERSION_JS=src/js/version.js
 DEFAULT_VERSION="vUNKNOWN ($(date +%Y-%m-%dT%T))"
 
 LF='
@@ -30,9 +31,9 @@ fi
 NEXT_VERSION=$(expr "$NEXT_VERSION" : v*'\(.*\)')
 
 # get current version from version file
-if test -r $VERSION_FILE
+if test -r $VERSION_TXT
 then
-    CURR_VERSION=$(sed -e 's/^VERSION=//' <$VERSION_FILE)
+    CURR_VERSION=$(sed -e 's/^VERSION=//' <$VERSION_TXT)
 else
     CURR_VERSION=unset
 fi
@@ -41,5 +42,7 @@ test "$NEXT_VERSION" = "$CURR_VERSION" || {
     # echo to screen
     echo >&2 "$NEXT_VERSION"
     # echo to version.txt file
-    echo "$NEXT_VERSION" >$VERSION_FILE
+    echo "$NEXT_VERSION" >$VERSION_TXT
+    # update version.js
+    sed --in-place --expression="s/'.*'/'$NEXT_VERSION'/" $VERSION_JS
 }
