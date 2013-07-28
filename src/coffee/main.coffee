@@ -7,7 +7,21 @@
 # based on:
 #   https://github.com/larryng/coffeescript-repl
 
-require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store) ->
+require [
+    'version',
+    'jquery',
+    'nodeutil',
+    'store',
+    'os',
+    'todo'
+], (
+    version,
+    $,
+    nodeutil,
+    store,
+    os,
+    todo
+) ->
 
   $ ->
     SAVED_CONSOLE_LOG = console.log
@@ -229,6 +243,9 @@ require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store
           <strong>$$.resetSettings()</strong> will reset settings to default.
 
         """
+
+      os.ui.echo = repl.print
+      todo.init os.env, os.filesystem, os.ui, os.system
 
       # print header
       @version()
