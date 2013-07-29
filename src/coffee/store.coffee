@@ -33,16 +33,32 @@ define 'store', ['jquery', 'localfile'], ($, localfile) ->
         (!!ENDSTORE!{1}![\s\S]*$)                     #4 close, markup
     ///m
 
-    load = ->
-        JSON.parse innerHTML.replace(todoHtmlRegex, '$3')
+    store = JSON.parse innerHTML.replace(todoHtmlRegex, '$3')
 
-    save = (store) ->
+    load = ->
+        store
+
+    save = ->
         jsonStr = JSON.stringify(store)
-        if oldContents = localfile.load localfile.normalizedPath()
+        filepath = localfile.normalizedPath()
+        if oldContents = localfile.load filepath
             newContents = oldContents.replace todoHtmlRegex, "$1$2#{jsonStr}$4"
-            localfile.save localfile.normalizedPath(), newContents
+            if not localfile.save filepath, newContents
+                console.error "store error: can't write to: " + filepath
+        else
+            console.error "store error: can't read from: " + filepath
+
+    get = (key) ->
+        # return clone of data
+        $.extend(true, {}, store)[key]
+
+    set = (key, value) ->
+        store[key] = value
+        @save store
 
     {
-        load: load,
-        save: save
+        load,
+        save,
+        get,
+        set
     }

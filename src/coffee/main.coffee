@@ -48,7 +48,7 @@ require [
         colorize: true
 
       constructor: (@output, @input, @prompt, settings={}) ->
-        @history = store.load().history
+        @history = store.get 'history'
         @historyi = -1
         @saved = ''
         @multiline = false
@@ -101,7 +101,7 @@ require [
 
       addToHistory: (s) =>
         @history.unshift s
-        store.save({history: @history})
+        store.set 'history', @history
         @historyi = -1
 
       addToSaved: (s) =>
