@@ -33,7 +33,7 @@ define 'store', ['jquery', 'localfile'], ($, localfile) ->
         (!!ENDSTORE!{1}![\s\S]*$)                     #4 close, markup
     ///m
 
-    store = JSON.parse innerHTML.replace(todoHtmlRegex, '$3')
+    store = JSON.parse innerHTML.replace(todoHtmlRegex, '$3') or {}
 
     load = ->
         store
