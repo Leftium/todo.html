@@ -1,6 +1,6 @@
 # todo.html os emulation layer
 
-define 'os', ['localfile'], (localfile) ->
+define 'os', ['localfile', 'store'], (localfile, store) ->
     env = {}
 
     ui =
@@ -19,11 +19,22 @@ define 'os', ['localfile'], (localfile) ->
     system.db.tags = [/tag/]
 
     fs =
-        load: (filepath) ->
-            return localfile.load filepath
+        load:  (filepath) ->
+            if matches = filepath.match(/(^#.*)/)
+                filename = matches[1]
+                files = store.get('files') or {}
+                files[filename] or null
+            else
+                localfile.load filepath
 
         save: (filepath, content) ->
-            return localfile.save filepath, content
+            if matches = filepath.match(/(^#.*)/)
+                filename = matches[1]
+                files = store.get('files') or {}
+                files[filename] = content
+                store.set 'files', files
+            else
+                localfile.save filepath, content
 
         append: (filepath, appendContent) ->
             if content = @load filepath
