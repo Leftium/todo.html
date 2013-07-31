@@ -14,7 +14,8 @@ require [
     'nodeutil',
     'store',
     'os',
-    'todo'
+    'todo',
+    'shellwords',
 ], (
     version,
     $,
@@ -22,7 +23,8 @@ require [
     nodeutil,
     store,
     os,
-    todo
+    todo,
+    shellwords
 ) ->
 
   $ ->
@@ -252,11 +254,10 @@ require [
         """
 
       os.ui.echo = repl.print
-      todo.init os.env, os.filesystem, os.ui, os.system
+      todo.init store.get('env') or {}, os.fs, os.ui, os.system
 
       # print header
       @version()
-      repl.print '\nhelp() for features and tips.\n'
-
+      repl.print 'Welcome! `todo ls +basics` starts a product tour.'
 
     init()
