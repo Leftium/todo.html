@@ -3,7 +3,7 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __slice = [].slice;
 
-  require(['version', 'jquery', 'nodeutil', 'store'], function(version, $, nodeutil, store) {
+  require(['version', 'jquery', 'coffee-script', 'nodeutil', 'store', 'os', 'todo', 'shellwords'], function(version, $, CoffeeScript, nodeutil, store, os, todo, shellwords) {
     return $(function() {
       var $input, $inputcopy, $inputdiv, $inputl, $inputr, $output, $prompt, SAVED_CONSOLE_LOG, TodoREPL, escapeHTML, init, resizeInput, scrollToBottom;
       SAVED_CONSOLE_LOG = console.log;
@@ -43,7 +43,7 @@
           this.setPrompt = __bind(this.setPrompt, this);
           this.processSaved = __bind(this.processSaved, this);
           this.print = __bind(this.print, this);
-          this.history = store.load().history;
+          this.history = store.get('history');
           this.historyi = -1;
           this.saved = '';
           this.multiline = false;
@@ -80,21 +80,33 @@
         };
 
         TodoREPL.prototype.processSaved = function() {
-          var e, output, value;
-          try {
-            value = eval.call(window, this.saved);
-            window[this.settings.lastVariable] = value;
-            output = nodeutil.inspect(value, this.settings.showHidden, this.settings.maxDepth, this.settings.colorize);
-          } catch (_error) {
-            e = _error;
-            if (e.stack) {
-              output = e.stack;
-              if (output.split('\n')[0] !== e.toString()) {
-                output = "" + (e.toString()) + "\n\nStack trace:\n" + e.stack;
+          var argv, compiled, e, output, value, _ref;
+          argv = shellwords.split(this.saved);
+          if ((_ref = argv[0]) === 'todo' || _ref === 'td' || _ref === 't') {
+            this.saved = '';
+            output = todo.run(argv.slice(1));
+          } else {
+            try {
+              if (CoffeeScript.compile != null) {
+                compiled = CoffeeScript.compile(this.saved);
+                compiled = compiled.slice(14, -17);
+              } else {
+                compiled = this.saved;
               }
-              output = output.replace(/file.*\//g, '');
-            } else {
-              output = e.toString();
+              value = eval.call(window, compiled);
+              window[this.settings.lastVariable] = value;
+              output = nodeutil.inspect(value, this.settings.showHidden, this.settings.maxDepth, this.settings.colorize);
+            } catch (_error) {
+              e = _error;
+              if (e.stack) {
+                output = e.stack;
+                if (output.split('\n')[0] !== e.toString()) {
+                  output = "" + (e.toString()) + "\n\nStack trace:\n" + e.stack;
+                }
+                output = output.replace(/file.*\//g, '');
+              } else {
+                output = e.toString();
+              }
             }
           }
           this.saved = '';
@@ -109,9 +121,7 @@
 
         TodoREPL.prototype.addToHistory = function(s) {
           this.history.unshift(s);
-          store.save({
-            history: this.history
-          });
+          store.set('history', this.history);
           return this.historyi = -1;
         };
 
@@ -210,13 +220,15 @@
         resizeInput();
         $input.focus();
         window.version = function() {
-          return repl.print("todo.html REPL v" + version + "\n\nDeveloped by: John-Kim Murphy (http://Leftium.com)\nCode repository: https://github.com/Leftium/todo.html\n\nBased on idea by: Gina Trapani (http://ginatrapani.org)\nLicense: GPL http://www.gnu.org/copyleft/gpl.html\n");
+          return repl.print("<b>todo.html by <a href=http://leftium.com>john-kim murphy</a></b>\nv" + version + " | based on <a href=http://todotxt.com>idea</a> by <a href=http://ginatrapani.org>gina trapani</a> | <a href=http://www.gnu.org/copyleft/gpl.html>gpl license</a> | <a href=https://github.com/Leftium/todo.html>fork me on github</a>!\n");
         };
         window.help = function() {
           return repl.print("<strong>Features</strong>\n<strong>========</strong>\n+ Built-in JavaScript interpreter.\n+ <strong>[Esc]</strong> toggles multiline mode.\n+ <strong>[Up]/[Down] arrow</strong> flips through line history.\n+ <strong>" + repl.settings.lastVariable + "</strong> stores the last returned value.\n+ Access the internals of this console through <strong>$$</strong>.\n+ <strong>$$.clear()</strong> clears this console.\n\n<strong>Settings</strong>\n<strong>========</strong>\nYou can modify the behavior of this REPL by altering <strong>$$.settings</strong>:\n\n+ <strong>lastVariable</strong> (" + repl.settings.lastVariable + "): variable name in which last returned value is stored\n+ <strong>maxLines</strong> (" + repl.settings.maxLines + "): max line count of this console\n+ <strong>maxDepth</strong> (" + repl.settings.maxDepth + "): max depth in which to inspect outputted object\n+ <strong>showHidden</strong> (" + repl.settings.showHidden + "): flag to output hidden (not enumerable) properties of objects\n+ <strong>colorize</strong> (" + repl.settings.colorize + "): flag to colorize output (set to false if REPL is slow)\n\n<strong>$$.saveSettings()</strong> will save settings to localStorage.\n<strong>$$.resetSettings()</strong> will reset settings to default.\n");
         };
+        os.ui.echo = repl.print;
+        todo.init(store.get('env') || {}, os.fs, os.ui, os.system);
         this.version();
-        return repl.print('\nhelp() for features and tips.\n');
+        return repl.print('Welcome! `todo ls +basics` starts a product tour.');
       };
       return init();
     });

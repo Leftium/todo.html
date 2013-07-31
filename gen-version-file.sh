@@ -13,7 +13,7 @@ if test -d .git -o -f .git &&
     NEXT_VERSION=$(git describe --abbrev=4 HEAD 2>/dev/null) &&
     case "$NEXT_VERSION" in
     *$LF*) (exit 1) ;;
-    v[0-9]*)
+    [0-9]*)
         # append '+' if "dirty" modified/untracked files exist
         git update-index -q --refresh
         test -z "$(git diff-index --name-only HEAD --)" ||

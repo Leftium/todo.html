@@ -7,7 +7,25 @@
 # based on:
 #   https://github.com/larryng/coffeescript-repl
 
-require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store) ->
+require [
+    'version',
+    'jquery',
+    'coffee-script',
+    'nodeutil',
+    'store',
+    'os',
+    'todo',
+    'shellwords',
+], (
+    version,
+    $,
+    CoffeeScript,
+    nodeutil,
+    store,
+    os,
+    todo,
+    shellwords
+) ->
 
   $ ->
     SAVED_CONSOLE_LOG = console.log
@@ -34,7 +52,7 @@ require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store
         colorize: true
 
       constructor: (@output, @input, @prompt, settings={}) ->
-        @history = store.load().history
+        @history = store.get 'history'
         @historyi = -1
         @saved = ''
         @multiline = false
@@ -63,21 +81,31 @@ require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store
         undefined
 
       processSaved: =>
-        try
-          value = eval.call window, @saved
-          window[@settings.lastVariable] = value
-          output = nodeutil.inspect value, @settings.showHidden, @settings.maxDepth, @settings.colorize
-        catch e
-          if e.stack
-            output = e.stack
+        argv = shellwords.split(@saved)
+        if argv[0] in ['todo', 'td', 't']
+            @saved = ''
+            output = todo.run argv[1..]
+        else
+            try
+                if CoffeeScript.compile?
+                    compiled = CoffeeScript.compile @saved
+                    compiled = compiled[14...-17]
+                else
+                    compiled = @saved  #  JavaScript
+                value = eval.call window, compiled
+                window[@settings.lastVariable] = value
+                output = nodeutil.inspect value, @settings.showHidden, @settings.maxDepth, @settings.colorize
+            catch e
+              if e.stack
+                output = e.stack
 
-            # FF doesn't have Error.toString() as the first line of Error.stack
-            # while Chrome does.
-            if output.split('\n')[0] isnt e.toString()
-                output = "#{e.toString()}\n\nStack trace:\n#{e.stack}"
-            output = output.replace /file.*\//g, ''
-          else
-            output = e.toString()
+                # FF doesn't have Error.toString() as the first line of Error.stack
+                # while Chrome does.
+                if output.split('\n')[0] isnt e.toString()
+                    output = "#{e.toString()}\n\nStack trace:\n#{e.stack}"
+                output = output.replace /file.*\//g, ''
+              else
+                output = e.toString()
         @saved = ''
         @print output
 
@@ -87,7 +115,7 @@ require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store
 
       addToHistory: (s) =>
         @history.unshift s
-        store.save({history: @history})
+        store.set 'history', @history
         @historyi = -1
 
       addToSaved: (s) =>
@@ -193,13 +221,8 @@ require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store
 
       window.version = () ->
           repl.print """
-            todo.html REPL v#{version}
-
-            Developed by: John-Kim Murphy (http://Leftium.com)
-            Code repository: https://github.com/Leftium/todo.html
-
-            Based on idea by: Gina Trapani (http://ginatrapani.org)
-            License: GPL http://www.gnu.org/copyleft/gpl.html
+            <b>todo.html by <a href=http://leftium.com>john-kim murphy</a></b>
+            v#{version} | based on <a href=http://todotxt.com>idea</a> by <a href=http://ginatrapani.org>gina trapani</a> | <a href=http://www.gnu.org/copyleft/gpl.html>gpl license</a> | <a href=https://github.com/Leftium/todo.html>fork me on github</a>!
 
           """
 
@@ -230,9 +253,11 @@ require ['version', 'jquery', 'nodeutil', 'store'], (version, $, nodeutil, store
 
         """
 
+      os.ui.echo = repl.print
+      todo.init store.get('env') or {}, os.fs, os.ui, os.system
+
       # print header
       @version()
-      repl.print '\nhelp() for features and tips.\n'
-
+      repl.print 'Welcome! `todo ls +basics` starts a product tour.'
 
     init()
