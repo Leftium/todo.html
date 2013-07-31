@@ -116,7 +116,8 @@ define [], () ->
     processConfig = (todoFileContents) ->
         for line in todoFileContents.split('\n')
             # ignore #comments
-            line = line.replace /#.*/, ''
+            # TODO: better comment parsing
+            line = line.replace /^#.*/, ''
 
             # SHIM: test-lib.sh touch a file to confirm config file run
             if touchFile = line.match(/touch\s+(.*)/)?[1].trim()
