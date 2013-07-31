@@ -10,6 +10,7 @@
 require [
     'version',
     'jquery',
+    'coffee-script',
     'nodeutil',
     'store',
     'os',
@@ -17,6 +18,7 @@ require [
 ], (
     version,
     $,
+    CoffeeScript,
     nodeutil,
     store,
     os,
@@ -77,21 +79,31 @@ require [
         undefined
 
       processSaved: =>
-        try
-          value = eval.call window, @saved
-          window[@settings.lastVariable] = value
-          output = nodeutil.inspect value, @settings.showHidden, @settings.maxDepth, @settings.colorize
-        catch e
-          if e.stack
-            output = e.stack
+        argv = shellwords.split(@saved)
+        if argv[0] in ['todo', 'td', 't']
+            @saved = ''
+            output = todo.run argv[1..]
+        else
+            try
+                if CoffeeScript.compile?
+                    compiled = CoffeeScript.compile @saved
+                    compiled = compiled[14...-17]
+                else
+                    compiled = @saved  #  JavaScript
+                value = eval.call window, compiled
+                window[@settings.lastVariable] = value
+                output = nodeutil.inspect value, @settings.showHidden, @settings.maxDepth, @settings.colorize
+            catch e
+              if e.stack
+                output = e.stack
 
-            # FF doesn't have Error.toString() as the first line of Error.stack
-            # while Chrome does.
-            if output.split('\n')[0] isnt e.toString()
-                output = "#{e.toString()}\n\nStack trace:\n#{e.stack}"
-            output = output.replace /file.*\//g, ''
-          else
-            output = e.toString()
+                # FF doesn't have Error.toString() as the first line of Error.stack
+                # while Chrome does.
+                if output.split('\n')[0] isnt e.toString()
+                    output = "#{e.toString()}\n\nStack trace:\n#{e.stack}"
+                output = output.replace /file.*\//g, ''
+              else
+                output = e.toString()
         @saved = ''
         @print output
 
