@@ -1,10 +1,25 @@
-﻿  a {
-    color: #fff;
+/* solarized color scheme: http://ethanschoonover.com/solarized
+
+base03    #002b36  background
+base02    #073642  background highlight
+base01    #586e75  comments, secondary
+base00    #657b83
+base0     #839496  text, primary
+base1     #93a1a1  emphasis
+base2     #eee8d5
+base3     #fdf6e3
+*/
+
+  a {
+    color: #93a1a1;
     text-decoration: none;
+    border-bottom: 1px solid #073642;
   }
 
   a:hover {
-    text-decoration: underline;
+    color: #eee8d5;
+    text-decoration: none;
+    border-bottom: 1px solid #839496;
   }
 
   pre {
@@ -14,8 +29,8 @@
   }
 
   body {
-    background-color: #222;
-    color: #fff;
+    background-color: #002b36;
+    color: #839496;
     font-size: 14px;
     font-family: Consolas, Courier New, DejaVu Sans Mono, monospace;
   }
@@ -40,7 +55,7 @@
     float: left;
   }
 
-  #inputr {
+  #input {
     display: inline;
     float: left;
   }
@@ -48,8 +63,8 @@
   #input {
     border: none;
     outline: none;
-    background-color: #222;
-    color: #fff;
+    background-color: #002b36;
+    color: #839496;
     font: inherit;
     margin: 0;
     padding: 0;
