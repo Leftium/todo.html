@@ -210,7 +210,7 @@ define([], function() {
             return !!window.Components;
         },
         loadFile: function(filePath) {
-            // Returns null if it can't do it, false if there's an error, or a string of the content if successful
+            // Returns null if it can't do it, or a string of the content if successful
             if(window.Components) {
                 try {
                     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -228,7 +228,6 @@ define([], function() {
                     return contents;
                 } catch(ex) {
                     //# alert("Exception while attempting to load\n\n" + ex);
-                    return false;
                 }
             }
             return null;
