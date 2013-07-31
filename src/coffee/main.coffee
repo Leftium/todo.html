@@ -219,13 +219,8 @@ require [
 
       window.version = () ->
           repl.print """
-            todo.html REPL v#{version}
-
-            Developed by: John-Kim Murphy (http://Leftium.com)
-            Code repository: https://github.com/Leftium/todo.html
-
-            Based on idea by: Gina Trapani (http://ginatrapani.org)
-            License: GPL http://www.gnu.org/copyleft/gpl.html
+            <b>todo.html by <a href=http://leftium.com>john-kim murphy</a></b>
+            v#{version} | based on <a href=http://todotxt.com>idea</a> by <a href=http://ginatrapani.org>gina trapani</a> | <a href=http://www.gnu.org/copyleft/gpl.html>gpl license</a> | <a href=https://github.com/Leftium/todo.html>fork me on github</a>!
 
           """
 
