@@ -110,7 +110,7 @@
             }
           }
           this.saved = '';
-          return this.print(output);
+          return this.print(output.split('\n')[0]);
         };
 
         TodoREPL.prototype.setPrompt = function() {

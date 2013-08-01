@@ -107,7 +107,7 @@ require [
               else
                 output = e.toString()
         @saved = ''
-        @print output
+        @print output.split('\n')[0]
 
       setPrompt: =>
         s = if @multiline then '----' else 'todo'
