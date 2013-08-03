@@ -219,6 +219,8 @@ require [
       resizeInput()
       $input.focus()
 
+      document.title = "todo.html v#{version}"
+
       window.version = () ->
           repl.print """
             <b>todo.html by <a href=http://leftium.com>john-kim murphy</a></b>
