@@ -114,6 +114,7 @@ require [
         @prompt.html "#{s}&gt;&nbsp;"
 
       addToHistory: (s) =>
+        @history = (h for h in @history when h isnt s)
         @history.unshift s
         store.set 'history', @history
         @historyi = -1
