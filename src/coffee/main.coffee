@@ -173,6 +173,12 @@ require [
               @historyi += -1
               @input.val @history[@historyi]
 
+          when 76, 108  # L, l
+            if e.ctrlKey
+              e.preventDefault()
+              @clear()
+
+
 
     resizeInput = (e) ->
       width = $inputdiv.width() - $inputl.width()
