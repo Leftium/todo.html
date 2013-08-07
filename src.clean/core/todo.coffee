@@ -38,7 +38,8 @@ expand = (str) ->
 formattedDate = (attachTime)->
     date = new Date()
     if env.TODO_TEST_TIME
-        date = new Date(env.TODO_TEST_TIME * 1000)
+        date = new Date(env.TODO_TEST_TIME * 1000 +
+                        date.getTimezoneOffset() * 60000)
 
     result = "#{date.getFullYear()              }-" +
              "#{zeroFill(date.getMonth() + 1, 2)}-" +
