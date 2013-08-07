@@ -267,25 +267,7 @@ test_expect_success () {
 test_expect_output () {
 	test "$#" = 2 ||
 	error "bug in the test script: not 2 parameters to test-expect-output"
-	if ! test_skip "$@"
-	then
-		say >&3 "expecting success and output: $2"
-		test_run_ "$2"
-		if [ "$?" = 0 -a "$eval_ret" = 0 ]
-		then
-			cmp_output=$(test_cmp expect output)
-			if [ "$?" = 0 ]
-			then
-				test_ok_ "$1"
-			else
-				test_failure_ "$@" "
-$cmp_output"
-			fi
-		else
-			test_failure_ "$@"
-		fi
-	fi
-	echo >&3 ""
+	test_expect_code_and_output 0 "$@"
 }
 
 test_expect_code_and_output () {
@@ -293,7 +275,11 @@ test_expect_code_and_output () {
 	error "bug in the test script: not 3 parameters to test-expect-code-and-output"
 	if ! test_skip "$@"
 	then
-		say >&3 "expecting exit code $1 and output: $3"
+		if [ "$1" = 0 ]; then
+			say >&3 "expecting success and output: $3"
+		else
+			say >&3 "expecting exit code $1 and output: $3"
+		fi
 		test_run_ "$3"
 		if [ "$?" = 0 -a "$eval_ret" = "$1" ]
 		then
@@ -573,14 +559,16 @@ test_tick () {
 }
 
 # Generate and run a series of tests based on a transcript.
-# Usage: test_todo_session "description" <<EOF
+# Usage: test_todo_session "description" <<'EOF'
 # >>> command
 # output1
 # output2
+#
 # >>> command
 # === exit status
-# output3
-# output4
+# output3 with empty line (must be escaped here)
+# \
+# output5
 # EOF
 test_todo_session () {
     test "$#" = 1 ||
@@ -589,7 +577,7 @@ test_todo_session () {
     cmd=""
     status=0
     > expect
-    while read -r line
+    while IFS= read -r line
     do
 	case $line in
 	">>> "*)
@@ -612,6 +600,9 @@ test_todo_session () {
 		status=0
 		> expect
 	    fi
+	    ;;
+	\\)
+	    echo "" >> expect
 	    ;;
 	*)
 	    echo "$line" >> expect
