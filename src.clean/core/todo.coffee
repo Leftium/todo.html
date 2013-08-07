@@ -476,9 +476,9 @@ replaceOrPrepend = (action, argv) ->
     priority = matches?[1] ? ''
     prepdate = matches?[2] ? ''
 
-    if prepdate and action is "replace" and /^[0-9]{2,4}-[0-9]{2}-[0-9]{2}/.test input
-        # If the replaced text starts with a date, it will replace the existing
-        # date, too.
+    if prepdate and action is "replace" and /^(\(.\) ){0,1}[0-9]{2,4}-[0-9]{2}-[0-9]{2}/.test input
+        # If the replaced text starts with a [priority +] date, it will replace
+        # the existing date, too.
         prepdate = ''
 
     # Temporarily remove any existing priority and prepended date, perform the
