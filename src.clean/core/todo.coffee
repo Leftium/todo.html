@@ -193,7 +193,7 @@ shorthelp = ->
           list|ls [TERM...]
           listall|lsa [TERM...]
           listaddons
-          listcon|lsc
+          listcon|lsc [TERM...]
           listfile|lf [SRC [TERM...]]
           listpri|lsp [PRIORITIES] [TERM...]
           listproj|lsprj [TERM...]
@@ -350,7 +350,10 @@ help = ->
 
             listcon
             lsc
+            listcon [TERM...]
+            lsc [TERM...]
               Lists all the task contexts that start with the @ sign in todo.txt.
+              If TERM specified, considers only tasks that contain TERM(s).
 
             listfile [SRC [TERM...]]
             lf [SRC [TERM...]]
@@ -1071,6 +1074,9 @@ root.run = (argv) ->
 
         when 'listcon', 'lsc'
             file = loadSourceVarOrTodoFile()
+            argv.shift()
+            filters = filtercommand '', '', argv
+            file = applyFilters(filters, file.split('\n')).join('\n')
 
             if contexts = file.match /(^|\s)@[\x21-\x7E]+/g
                 contexts = (context.trim() for context in contexts)
