@@ -190,6 +190,7 @@ shorthelp = ->
           depri|dp ITEM#[, ITEM#, ITEM#, ...]
           do ITEM#[, ITEM#, ITEM#, ...]
           help
+          help [ACTION...]
           list|ls [TERM...]
           listall|lsa [TERM...]
           listaddons
@@ -279,7 +280,11 @@ help = ->
 
             """
 
-    echo """
+    echo actionsHelp()
+    exit 1
+
+actionsHelp = () ->
+        """
         \  Built-in Actions:
             add "THING I NEED TO DO +project @context"
             a "THING I NEED TO DO +project @context"
@@ -325,8 +330,9 @@ help = ->
             do ITEM#[, ITEM#, ITEM#, ...]
               Marks task(s) on line ITEM# as done in todo.txt.
 
-            help
-              Display this help message.
+            help [ACTION...]
+              Display help about usage, options, built-in actions,
+              or just the usage help for the passed ACTION(s).
 
             list [TERM...]
             ls [TERM...]
@@ -407,7 +413,13 @@ help = ->
 
         """
 
-    exit 1
+actionUsage = (actionNames) ->
+    for actionName in actionNames
+        builtinActionUsage = actionsHelp().match(///^\s\s\s\s#{actionName}\s[\s\S]*?^$///m)
+        if builtinActionUsage
+            echo builtinActionUsage[0]
+        else
+            die """TODO: No action "#{actionName}" exists."""
 
 
 die = (msg) ->
@@ -1025,7 +1037,11 @@ root.run = (argv) ->
                 root.run ['archive']
 
         when 'help'
-            help()
+            argv.shift()  # Was help; new $1 is first help topic / action name
+            if argv.length
+                actionUsage argv
+            else
+                help()
 
         when 'shorthelp'
             shorthelp()
