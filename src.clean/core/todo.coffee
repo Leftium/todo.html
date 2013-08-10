@@ -129,7 +129,7 @@ processConfig = (todoFileContents) ->
             # Get the current path sans filename
             path = env.PWD
 
-            value = value.replace /`\s*dirname\s+['"]\$0['"]\s*`/, path
+            value = value.replace /\$\(\s*dirname\s+['"]\$0['"]\s*\)/, path
 
             # Strip single/double quotes from beginning and end
             value = value.match(/^["']*(.*?)["']*$/)[1]
@@ -211,7 +211,7 @@ shorthelp = ->
 
 help = ->
     echo """
-        Usage: #{oneline_usage}
+      \  Usage: #{oneline_usage}
 
         Options:
           -@
@@ -263,7 +263,7 @@ help = ->
 
     if (env.TODOTXT_VERBOSE > 1)
         echo """
-            Environment variables:
+          \  Environment variables:
               TODOTXT_AUTO_ARCHIVE            is same as option -a (0)/-A (1)
               TODOTXT_CFG_FILE=CONFIG_FILE    is same as option -d CONFIG_FILE
               TODOTXT_FORCE=1                 is same as option -f
@@ -280,7 +280,7 @@ help = ->
             """
 
     echo """
-          Built-in Actions:
+        \  Built-in Actions:
             add "THING I NEED TO DO +project @context"
             a "THING I NEED TO DO +project @context"
               Adds THING I NEED TO DO to your todo.txt file on its own line.
