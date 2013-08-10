@@ -106,6 +106,7 @@ require [
                 output = output.replace /file.*\//g, ''
               else
                 output = e.toString()
+              output = output.split('\n')[0]
         @saved = ''
         @print output
 
@@ -114,6 +115,7 @@ require [
         @prompt.html "#{s}&gt;&nbsp;"
 
       addToHistory: (s) =>
+        @history = (h for h in @history when h isnt s)
         @history.unshift s
         store.set 'history', @history
         @historyi = -1
@@ -129,7 +131,7 @@ require [
 
       handleKeypress: (e) =>
         switch e.which
-          when 13
+          when 13  # enter
             e.preventDefault()
             input = @input.val()
             @input.val ''
@@ -141,7 +143,7 @@ require [
               if input[...-1] isnt '\\' and not @multiline
                 @processSaved()
 
-          when 27
+          when 27  # esc
             e.preventDefault()
             input = @input.val()
 
@@ -158,19 +160,25 @@ require [
             @multiline = not @multiline
             @setPrompt()
 
-          when 38
+          when 38  # up
             e.preventDefault()
 
             if @historyi < @history.length-1
               @historyi += 1
               @input.val @history[@historyi]
 
-          when 40
+          when 40 # down
             e.preventDefault()
 
             if @historyi > 0
               @historyi += -1
               @input.val @history[@historyi]
+
+          when 76, 108  # L, l
+            if e.ctrlKey
+              e.preventDefault()
+              @clear()
+
 
 
     resizeInput = (e) ->
@@ -218,6 +226,8 @@ require [
       # initialize window
       resizeInput()
       $input.focus()
+
+      document.title = "todo.html v#{version}"
 
       window.version = () ->
           repl.print """

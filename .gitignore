@@ -10,3 +10,9 @@ version.txt
 *.lnk
 built/
 node_modules/
+src/js/main.js
+src/js/os.js
+src/js/shellwords.js
+src/js/store.js
+src/js/todo.js
+

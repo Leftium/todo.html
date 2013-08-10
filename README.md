@@ -1,7 +1,3 @@
-# NOTE: This is an alpha pre-release!
-##### This document describes the Todo.html vision. Although fully functional, some features may not be implemented yet...
-###### For example, the individual html, css, and javascript files have not been build into a single file yet. Please download all the files to try it out. (You can manually assemble the files, if you wish...)
-
 ## What is Todo.html?
 
 Todo.html is text-based task management streamlined to be even simpler and more portable. It is a local, cross-platform, single-page-application for viewing, searching, and modifying a text-based todo list. If you're new to the todo.txt concept, start [here](http://www.todotxt.com/).
@@ -42,3 +38,4 @@ Todo.html's major limitation is lack of true integration with the OS. Todo.html 
 2. Make sure your todo.cfg file is located in the same directory as todo.html
 3. Open todo.html in your web browser.
 4. Enter commands just like you would for todo.sh on the command line
+

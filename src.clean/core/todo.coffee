@@ -38,7 +38,8 @@ expand = (str) ->
 formattedDate = (attachTime)->
     date = new Date()
     if env.TODO_TEST_TIME
-        date = new Date(env.TODO_TEST_TIME * 1000)
+        date = new Date(env.TODO_TEST_TIME * 1000 +
+                        date.getTimezoneOffset() * 60000)
 
     result = "#{date.getFullYear()              }-" +
              "#{zeroFill(date.getMonth() + 1, 2)}-" +
@@ -128,7 +129,7 @@ processConfig = (todoFileContents) ->
             # Get the current path sans filename
             path = env.PWD
 
-            value = value.replace /`\s*dirname\s+['"]\$0['"]\s*`/, path
+            value = value.replace /\$\(\s*dirname\s+['"]\$0['"]\s*\)/, path
 
             # Strip single/double quotes from beginning and end
             value = value.match(/^["']*(.*?)["']*$/)[1]
@@ -174,7 +175,7 @@ usage = ->
 
 shorthelp = ->
     echo """
-        Usage: #{oneline_usage}
+      \  Usage: #{oneline_usage}
 
         Actions:
           add|a "THING I NEED TO DO +project @context"
@@ -189,10 +190,11 @@ shorthelp = ->
           depri|dp ITEM#[, ITEM#, ITEM#, ...]
           do ITEM#[, ITEM#, ITEM#, ...]
           help
+          help [ACTION...]
           list|ls [TERM...]
           listall|lsa [TERM...]
           listaddons
-          listcon|lsc
+          listcon|lsc [TERM...]
           listfile|lf [SRC [TERM...]]
           listpri|lsp [PRIORITIES] [TERM...]
           listproj|lsprj [TERM...]
@@ -203,14 +205,13 @@ shorthelp = ->
           report
           shorthelp
 
+        Actions can be added and overridden using scripts in the actions
         See "help" for more details.
         """
-    exit 0
-
 
 help = ->
     echo """
-        Usage: #{oneline_usage}
+      \  Usage: #{oneline_usage}
 
         Options:
           -@
@@ -262,7 +263,7 @@ help = ->
 
     if (env.TODOTXT_VERBOSE > 1)
         echo """
-            Environment variables:
+          \  Environment variables:
               TODOTXT_AUTO_ARCHIVE            is same as option -a (0)/-A (1)
               TODOTXT_CFG_FILE=CONFIG_FILE    is same as option -d CONFIG_FILE
               TODOTXT_FORCE=1                 is same as option -f
@@ -278,8 +279,12 @@ help = ->
 
             """
 
-    echo """
-          Built-in Actions:
+    echo actionsHelp()
+    exit 1
+
+actionsHelp = () ->
+        """
+        \  Built-in Actions:
             add "THING I NEED TO DO +project @context"
             a "THING I NEED TO DO +project @context"
               Adds THING I NEED TO DO to your todo.txt file on its own line.
@@ -324,8 +329,9 @@ help = ->
             do ITEM#[, ITEM#, ITEM#, ...]
               Marks task(s) on line ITEM# as done in todo.txt.
 
-            help
-              Display this help message.
+            help [ACTION...]
+              Display help about usage, options, built-in actions,
+              or just the usage help for the passed ACTION(s).
 
             list [TERM...]
             ls [TERM...]
@@ -349,7 +355,10 @@ help = ->
 
             listcon
             lsc
+            listcon [TERM...]
+            lsc [TERM...]
               Lists all the task contexts that start with the @ sign in todo.txt.
+              If TERM specified, considers only tasks that contain TERM(s).
 
             listfile [SRC [TERM...]]
             lf [SRC [TERM...]]
@@ -403,7 +412,22 @@ help = ->
 
         """
 
-    exit 1
+actionUsage = (actionNames) ->
+    for actionName in actionNames
+        builtinActionUsage = actionsHelp().match(///^\s\s\s\s#{actionName}\s[\s\S]*?^$///m)
+        if builtinActionUsage
+            echo builtinActionUsage[0]
+        else
+            die """TODO: No action "#{actionName}" exists."""
+
+
+dieWithHelp = (command, msg) ->
+    switch command
+        when 'help'
+            help()
+        when 'shorthelp'
+            shorthelp()
+    die msg
 
 
 die = (msg) ->
@@ -475,9 +499,9 @@ replaceOrPrepend = (action, argv) ->
     priority = matches?[1] ? ''
     prepdate = matches?[2] ? ''
 
-    if prepdate and action is "replace" and /^[0-9]{2,4}-[0-9]{2}-[0-9]{2}/.test input
-        # If the replaced text starts with a date, it will replace the existing
-        # date, too.
+    if prepdate and action is "replace" and /^(\(.\) ){0,1}[0-9]{2,4}-[0-9]{2}-[0-9]{2}/.test input
+        # If the replaced text starts with a [priority +] date, it will replace
+        # the existing date, too.
         prepdate = ''
 
     # Temporarily remove any existing priority and prepended date, perform the
@@ -558,7 +582,7 @@ root.run = (argv) ->
                 # Short-circuit option parsing and forward to the action.
                 # Cannot just invoke shorthelp() because we need the configuration
                 # processed to locate the add-on actions directory.
-                argv = ['--', 'shorthelp']
+                argv = ['-h', 'shorthelp']
                 optreset = true
             when 'n'
                 env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS = 0
@@ -658,7 +682,7 @@ root.run = (argv) ->
 
     # === SANITY CHECKS (thanks Karl!) ===
 
-    if not config then die "Fatal Error: Cannot read configuration file #{env.TODOTXT_CFG_FILE}"
+    if not config then dieWithHelp argv[0], "Fatal Error: Cannot read configuration file #{env.TODOTXT_CFG_FILE}"
     processConfig config
 
     # === APPLY OVERRIDES
@@ -1021,7 +1045,11 @@ root.run = (argv) ->
                 root.run ['archive']
 
         when 'help'
-            help()
+            argv.shift()  # Was help; new $1 is first help topic / action name
+            if argv.length
+                actionUsage argv
+            else
+                help()
 
         when 'shorthelp'
             shorthelp()
@@ -1070,6 +1098,9 @@ root.run = (argv) ->
 
         when 'listcon', 'lsc'
             file = loadSourceVarOrTodoFile()
+            argv.shift()
+            filters = filtercommand '', '', argv
+            file = applyFilters(filters, file.split('\n')).join('\n')
 
             if contexts = file.match /(^|\s)@[\x21-\x7E]+/g
                 contexts = (context.trim() for context in contexts)
