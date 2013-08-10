@@ -106,8 +106,9 @@ require [
                 output = output.replace /file.*\//g, ''
               else
                 output = e.toString()
+              output = output.split('\n')[0]
         @saved = ''
-        @print output.split('\n')[0]
+        @print output
 
       setPrompt: =>
         s = if @multiline then '----' else 'todo'
