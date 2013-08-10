@@ -175,7 +175,7 @@ usage = ->
 
 shorthelp = ->
     echo """
-        Usage: #{oneline_usage}
+      \  Usage: #{oneline_usage}
 
         Actions:
           add|a "THING I NEED TO DO +project @context"
@@ -205,10 +205,9 @@ shorthelp = ->
           report
           shorthelp
 
+        Actions can be added and overridden using scripts in the actions
         See "help" for more details.
         """
-    exit 0
-
 
 help = ->
     echo """
@@ -422,6 +421,15 @@ actionUsage = (actionNames) ->
             die """TODO: No action "#{actionName}" exists."""
 
 
+dieWithHelp = (command, msg) ->
+    switch command
+        when 'help'
+            help()
+        when 'shorthelp'
+            shorthelp()
+    die msg
+
+
 die = (msg) ->
     echo msg
     exit 1
@@ -574,7 +582,7 @@ root.run = (argv) ->
                 # Short-circuit option parsing and forward to the action.
                 # Cannot just invoke shorthelp() because we need the configuration
                 # processed to locate the add-on actions directory.
-                argv = ['--', 'shorthelp']
+                argv = ['-h', 'shorthelp']
                 optreset = true
             when 'n'
                 env.OVR_TODOTXT_PRESERVE_LINE_NUMBERS = 0
@@ -674,7 +682,7 @@ root.run = (argv) ->
 
     # === SANITY CHECKS (thanks Karl!) ===
 
-    if not config then die "Fatal Error: Cannot read configuration file #{env.TODOTXT_CFG_FILE}"
+    if not config then dieWithHelp argv[0], "Fatal Error: Cannot read configuration file #{env.TODOTXT_CFG_FILE}"
     processConfig config
 
     # === APPLY OVERRIDES
