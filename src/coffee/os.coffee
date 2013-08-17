@@ -19,7 +19,10 @@ define 'os', ['localfile', 'store'], (localfile, store) ->
     system.db.tags = [/tag/]
 
     fs =
+        lastFilePath: '',
+
         load:  (filepath) ->
+            @lastFilePath = filepath
             if matches = filepath.match(/(^#.*)/)
                 filename = matches[1]
                 files = store.get('files') or {}

@@ -1,3 +1,5 @@
+root = exports ? this
+
 go   = require './getopt.js'
 todo = require './todo.js'
 fs   = require 'fs'
@@ -79,18 +81,23 @@ filesystem = {
 }
 
 db = system.db
-
-# Strip the first argument, which is specific to node.js.
-argv = process.argv[2..]
-
-env = {}
-for e of process.env
-    env[e] = process.env[e]
-env.HOME = argv.shift()
-
 db 'tag', 'TEST DB'
 
-todo.init env, filesystem, ui, system
-exitCode = todo.run argv
-process.exit exitCode
+root.run = () ->
+    # Strip the first argument, which is specific to node.js.
+    argv = process.argv[2..]
+
+    env = {}
+    for e of process.env
+        env[e] = process.env[e]
+
+    if require.main is module
+        env.HOME = argv.shift()
+
+    todo.init env, filesystem, ui, system
+    exitCode = todo.run argv
+    process.exit exitCode
+
+if require.main is module
+    root.run()
 
