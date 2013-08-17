@@ -14,7 +14,7 @@ require [
     'nodeutil',
     'store',
     'os',
-    'todo',
+    'node_modules/todo.txt-node/lib/todo',
     'shellwords',
 ], (
     version,

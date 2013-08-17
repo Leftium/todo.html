@@ -13,6 +13,7 @@ module.exports = function(grunt) {
                         ascii_only: true
                     },
                     preserveLicenseComments: false,
+                    paths: { node_modules: '../../node_modules' },
                     modules: [
                         {
                             name: "main"
