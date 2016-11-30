@@ -1,3 +1,17 @@
+# This project has been reborn as [Todo.taskpaper][todo.taskpaper]!
+
+- New GitHub repository: [github.com/Leftium/todo.taskpaper][todo.taskpaper]
+- Todo.html is no longer actively developed... 
+
+[todo.taskpaper]: https://github.com/Leftium/todo.taskpaper
+
+...
+
+...
+
+...
+
+
 ## What is Todo.html?
 
 Todo.html is text-based task management streamlined to be even simpler and more portable. It is a local, cross-platform, single-page-application for viewing, searching, and modifying a text-based todo list. If you're new to the todo.txt concept, start [here](http://www.todotxt.com/).
